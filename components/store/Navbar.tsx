@@ -1,0 +1,242 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ShoppingCart, Search, User, Menu, X, LogOut } from 'lucide-react';
+import { useCartStore } from '@/lib/cart-store';
+import { supabase, isAdmin } from '@/lib/supabase';
+import CartDrawer from './CartDrawer';
+
+export default function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [user, setUser] = useState<{ email?: string | null } | null>(null);
+  const [admin, setAdmin] = useState(false);
+  const router = useRouter();
+  const itemCount = useCartStore((s) => s.itemCount());
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        setUser(data.session.user);
+        setAdmin(isAdmin(data.session.user.email));
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAdmin(isAdmin(session?.user?.email));
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/productos?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  return (
+    <>
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-200 ${
+          scrolled ? 'shadow-md' : 'shadow-sm'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-2xl">🐾</span>
+              <div>
+                <span className="text-xl font-extrabold text-primary">PetfyCo</span>
+                <span className="text-xs text-petfy-grey-text block leading-none -mt-0.5">Tienda</span>
+              </div>
+            </Link>
+
+            {/* Desktop Nav Links */}
+            <div className="hidden md:flex items-center gap-8">
+              <Link href="/" className="text-navy font-medium hover:text-primary transition-colors text-sm">
+                Inicio
+              </Link>
+              <Link href="/productos" className="text-navy font-medium hover:text-primary transition-colors text-sm">
+                Productos
+              </Link>
+              <Link href="/#nosotros" className="text-navy font-medium hover:text-primary transition-colors text-sm">
+                Nosotros
+              </Link>
+              {admin && (
+                <Link
+                  href="/admin"
+                  className="text-petfy-orange font-semibold hover:text-orange-600 transition-colors text-sm"
+                >
+                  Admin
+                </Link>
+              )}
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-2">
+              {/* Search */}
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="p-2 rounded-xl hover:bg-petfy-grey transition-colors text-navy"
+                aria-label="Buscar"
+              >
+                <Search size={20} />
+              </button>
+
+              {/* Cart */}
+              <button
+                onClick={() => setCartOpen(true)}
+                className="p-2 rounded-xl hover:bg-petfy-grey transition-colors text-navy relative"
+                aria-label="Carrito"
+              >
+                <ShoppingCart size={20} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-petfy-pink text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </span>
+                )}
+              </button>
+
+              {/* User */}
+              {user ? (
+                <div className="hidden md:flex items-center gap-2">
+                  <Link
+                    href="/pedidos"
+                    className="p-2 rounded-xl hover:bg-petfy-grey transition-colors text-navy"
+                    title={user.email ?? ''}
+                  >
+                    <User size={20} />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-xl hover:bg-petfy-grey transition-colors text-petfy-grey-text"
+                    title="Cerrar sesión"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="hidden md:flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-accent transition-colors"
+                >
+                  <User size={16} />
+                  Ingresar
+                </Link>
+              )}
+
+              {/* Mobile menu toggle */}
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="md:hidden p-2 rounded-xl hover:bg-petfy-grey transition-colors text-navy"
+                aria-label="Menú"
+              >
+                {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Search bar */}
+          {searchOpen && (
+            <div className="pb-3">
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar productos..."
+                  className="w-full border border-gray-200 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-petfy-grey-text hover:text-primary"
+                >
+                  <Search size={18} />
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-3">
+            <Link
+              href="/"
+              className="block text-navy font-medium py-2 hover:text-primary"
+              onClick={() => setMenuOpen(false)}
+            >
+              Inicio
+            </Link>
+            <Link
+              href="/productos"
+              className="block text-navy font-medium py-2 hover:text-primary"
+              onClick={() => setMenuOpen(false)}
+            >
+              Productos
+            </Link>
+            <Link
+              href="/#nosotros"
+              className="block text-navy font-medium py-2 hover:text-primary"
+              onClick={() => setMenuOpen(false)}
+            >
+              Nosotros
+            </Link>
+            {admin && (
+              <Link
+                href="/admin"
+                className="block text-petfy-orange font-semibold py-2"
+                onClick={() => setMenuOpen(false)}
+              >
+                Admin
+              </Link>
+            )}
+            <div className="pt-2 border-t border-gray-100">
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <Link href="/pedidos" className="flex-1 btn-secondary text-center text-sm py-2" onClick={() => setMenuOpen(false)}>
+                    Mis Pedidos
+                  </Link>
+                  <button onClick={handleLogout} className="p-2 text-petfy-grey-text">
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="btn-primary block text-center text-sm"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Ingresar
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
+  );
+}
