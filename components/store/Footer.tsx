@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Instagram, Facebook, Twitter, Youtube, Mail } from 'lucide-react';
+import { Instagram, Facebook, Youtube, Mail } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -38,13 +38,15 @@ export default function Footer() {
                 <Facebook size={16} />
               </a>
               <a
-                href="https://twitter.com/petfyco"
+                href="https://x.com/petfyco"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors"
-                aria-label="Twitter"
+                aria-label="X"
               >
-                <Twitter size={16} />
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+                </svg>
               </a>
               <a
                 href="https://youtube.com/petfyco"
