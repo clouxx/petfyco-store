@@ -110,15 +110,8 @@ export default function HomePage() {
           </div>
 
           <div className="hidden lg:flex items-center justify-center animate-fade-in delay-300">
-            <div className="relative">
-              {/* Glow blanco detrás */}
-              <div className="absolute inset-0 rounded-full bg-white/25 blur-3xl scale-110" />
-              {/* Burbuja blanca que da contraste al texto del logo */}
-              <div className="relative bg-white/15 backdrop-blur-sm rounded-[40%] p-6 border border-white/20 shadow-2xl">
-                <Image src="/petfyco_nutricion_sin_fondo.png" alt="PetfyCo" width={400} height={400}
-                  className="animate-float drop-shadow-xl" priority />
-              </div>
-            </div>
+            <Image src="/petfyco_nutricion_sin_fondo.png" alt="PetfyCo" width={420} height={420}
+              className="animate-float drop-shadow-2xl" priority />
           </div>
         </div>
 
