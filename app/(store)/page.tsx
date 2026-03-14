@@ -28,7 +28,7 @@ const FALLBACK_CATS: Category[] = [
 ];
 
 const TRUST = [
-  { icon: <Truck size={26} />,       title: 'Envío a toda Colombia',    sub: 'Gratis desde $150.000',     color: 'text-primary', bg: 'bg-primary/10' },
+  { icon: <Truck size={26} />,       title: 'Domicilio en Medellín',    sub: 'Gratis desde $150.000',     color: 'text-primary', bg: 'bg-primary/10' },
   { icon: <ShieldCheck size={26} />, title: 'Productos Certificados',   sub: 'Aprobados por veterinarios', color: 'text-accent',  bg: 'bg-accent/10'  },
   { icon: <Headphones size={26} />,  title: 'Soporte 24 / 7',           sub: 'Expertos a tu disposición',  color: 'text-sky-500', bg: 'bg-sky-50'     },
   { icon: <Star size={26} />,        title: '4.9 ★ Satisfacción',       sub: '+2.000 clientes felices',    color: 'text-amber-500',bg: 'bg-amber-50'  },
@@ -88,7 +88,7 @@ export default function HomePage() {
               <span className="text-accent">mascota</span> merece
             </h1>
             <p className="text-white/80 text-lg md:text-xl leading-relaxed mb-10 max-w-lg animate-fade-up delay-200">
-              Nutrición premium, higiene y accesorios entregados a domicilio en Colombia.
+              Nutrición premium, higiene y accesorios entregados a domicilio en Medellín y su área metropolitana.
               Porque ellos son familia.
             </p>
             <div className="flex flex-wrap gap-4 animate-fade-up delay-300">
@@ -275,7 +275,7 @@ export default function HomePage() {
             </p>
             <div className="space-y-4">
               {[
-                { icon:'🚚', title:'Servicio 100% a domicilio', desc:'Pedido en minutos, entrega en 1-3 días hábiles — sin salir de casa' },
+                { icon:'🚚', title:'Servicio 100% a domicilio', desc:'Cubrimos Medellín y su área metropolitana — entrega en 1-3 días hábiles' },
                 { icon:'✅', title:'Calidad garantizada',        desc:'Productos certificados por veterinarios' },
                 { icon:'💚', title:'Amor por los animales',      desc:'Apoyamos refugios locales con cada compra' },
               ].map(({icon,title,desc})=>(

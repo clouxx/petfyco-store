@@ -12,12 +12,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'PetfyCo Tienda | Nutrición y Limpieza para Mascotas',
   description:
-    'PetfyCo es la tienda en línea colombiana especializada en productos premium para mascotas. Nutrición, higiene, accesorios y más con envío a toda Colombia.',
-  keywords: 'mascotas, perros, gatos, nutrición, higiene, accesorios, Colombia, tienda online',
+    'PetfyCo es la tienda en línea especializada en productos premium para mascotas. Nutrición, higiene, accesorios y más con domicilio en Medellín y su área metropolitana.',
+  keywords: 'mascotas, perros, gatos, nutrición, higiene, accesorios, Medellín, domicilio, tienda online',
   icons: { icon: '/favicon.png', apple: '/favicon.png' },
   openGraph: {
     title: 'PetfyCo Tienda | Nutrición y Limpieza para Mascotas',
-    description: 'Productos premium para tus mascotas con envío a toda Colombia.',
+    description: 'Productos premium para tus mascotas con domicilio en Medellín y su área metropolitana.',
     type: 'website',
     locale: 'es_CO',
     images: [{ url: '/logo.png', width: 400, height: 160, alt: 'PetfyCo' }],

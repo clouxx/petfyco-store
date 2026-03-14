@@ -70,7 +70,7 @@ export default function ContactoPage() {
               <MapPin size={20} className="text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-navy mb-0.5">Cobertura</p>
-                <p className="text-petfy-grey-text text-sm">Servicio a domicilio en ciudades principales de Colombia. Consulta disponibilidad en tu zona por WhatsApp.</p>
+                <p className="text-petfy-grey-text text-sm">Servicio a domicilio en <strong>Medellín y su área metropolitana</strong> (Bello, Itagüí, Envigado, Sabaneta, La Estrella, Copacabana). Consulta disponibilidad por WhatsApp.</p>
               </div>
             </div>
           </div>

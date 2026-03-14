@@ -236,7 +236,7 @@ export default function ProductDetailPage() {
           <div className="bg-petfy-grey rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-3 text-sm text-navy">
               <Package size={16} className="text-primary flex-shrink-0" />
-              <span>Envío a toda Colombia — Gratis en compras {'>'} $150.000</span>
+              <span>Domicilio en Medellín y área metropolitana — Gratis en compras {'>'} $150.000</span>
             </div>
           </div>
 

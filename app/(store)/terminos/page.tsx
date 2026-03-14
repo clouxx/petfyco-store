@@ -102,7 +102,7 @@ export default function TerminosPage() {
             <p className="text-petfy-grey-text text-sm leading-relaxed">
               Los tiempos de entrega son estimados y pueden variar según la zona de cobertura y
               disponibilidad. PetfyCo informará oportunamente al usuario en caso de retrasos
-              significativos. La plataforma opera en ciudades con cobertura activa en Colombia.
+              significativos. La plataforma opera en Medellín y su área metropolitana.
               PetfyCo no se responsabiliza por demoras causadas por circunstancias ajenas a su
               control (fuerza mayor, orden público, condiciones climáticas).
             </p>
