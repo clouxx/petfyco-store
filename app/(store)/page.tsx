@@ -124,6 +124,34 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ═══ DOMICILIO BANNER ════════════════════════════════════════════ */}
+      <section className="relative bg-gradient-to-r from-accent via-[#f0952a] to-accent overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          {['🐕','🐈','🐾','🏠','🚚','🐕','🐈','🐾','🏠','🚚'].map((e, i) => (
+            <span key={i} className="absolute text-4xl select-none" style={{ top: `${(i * 37) % 100}%`, left: `${(i * 19) % 100}%` }}>{e}</span>
+          ))}
+        </div>
+        <div className="relative max-w-5xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="flex items-center gap-4">
+            <div className="text-4xl animate-bounce-slow flex-shrink-0">🏠</div>
+            <div>
+              <p className="text-white font-extrabold text-xl md:text-2xl leading-tight tracking-tight">
+                ¡No salgas de casa! Nosotros llevamos todo.
+              </p>
+              <p className="text-white/85 text-sm md:text-base mt-0.5">
+                Tus mascotas felices sin que muevas un pie — pedido listo en 1 a 3 días.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/productos"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-accent font-extrabold px-7 py-3.5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all text-sm whitespace-nowrap"
+          >
+            <Truck size={18} /> Pedir a domicilio
+          </Link>
+        </div>
+      </section>
+
       {/* ═══ TRUST BAR ═══════════════════════════════════════════════════ */}
       <section className="py-14 px-4 max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
