@@ -131,21 +131,22 @@ export default function HomePage() {
             <span key={i} className="absolute text-4xl select-none" style={{ top: `${(i * 37) % 100}%`, left: `${(i * 19) % 100}%` }}>{e}</span>
           ))}
         </div>
-        <div className="relative max-w-5xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-4">
-            <div className="text-4xl animate-bounce-slow flex-shrink-0">🏠</div>
+        <div className="relative max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+          <div className="flex items-center gap-5">
+            <div className="text-5xl animate-bounce-slow flex-shrink-0">🏠</div>
             <div>
-              <p className="text-white font-extrabold text-xl md:text-2xl leading-tight tracking-tight">
-                ¡No salgas de casa! Nosotros llevamos todo.
+              <p className="text-white font-extrabold text-2xl md:text-3xl leading-tight tracking-tight">
+                ¡No tienes que salir de casa!
               </p>
-              <p className="text-white/85 text-sm md:text-base mt-0.5">
-                Tus mascotas felices sin que muevas un pie — pedido listo en 1 a 3 días.
+              <p className="text-white/90 text-sm md:text-base mt-1 leading-relaxed">
+                Todo en PetfyCo llega directo a tu puerta. Nuestro servicio <strong>es a domicilio</strong> —<br className="hidden md:block"/>
+                para que tú y tus mascotas estén cómodos sin moverse.
               </p>
             </div>
           </div>
           <Link
             href="/productos"
-            className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-accent font-extrabold px-7 py-3.5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all text-sm whitespace-nowrap"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-accent font-extrabold px-7 py-4 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all text-sm whitespace-nowrap"
           >
             <Truck size={18} /> Pedir a domicilio
           </Link>
@@ -267,14 +268,16 @@ export default function HomePage() {
               ¿Por qué elegir <span className="text-primary">PetfyCo</span>?
             </h2>
             <p className="text-petfy-grey-text leading-relaxed mb-8">
-              Somos una empresa colombiana apasionada por el bienestar animal. Cada producto ha sido
+              Somos una empresa colombiana nacida para llevar lo mejor a tu puerta.{' '}
+              <strong className="text-navy">Nuestro negocio es 100% a domicilio</strong> — no tienes
+              que salir de casa para darle a tu mascota todo lo que necesita. Cada producto ha sido
               seleccionado por expertos en nutrición y salud veterinaria.
             </p>
             <div className="space-y-4">
               {[
-                { icon:'🚚', title:'Entrega rápida',        desc:'1-3 días hábiles a todo el país' },
-                { icon:'✅', title:'Calidad garantizada',   desc:'Productos certificados por veterinarios' },
-                { icon:'💚', title:'Amor por los animales', desc:'Apoyamos refugios locales con cada compra' },
+                { icon:'🚚', title:'Servicio 100% a domicilio', desc:'Pedido en minutos, entrega en 1-3 días hábiles — sin salir de casa' },
+                { icon:'✅', title:'Calidad garantizada',        desc:'Productos certificados por veterinarios' },
+                { icon:'💚', title:'Amor por los animales',      desc:'Apoyamos refugios locales con cada compra' },
               ].map(({icon,title,desc})=>(
                 <div key={title} className="flex items-start gap-4 bg-[#F7FBF7] rounded-2xl p-4 hover:shadow-card transition-all duration-300">
                   <span className="text-2xl mt-0.5">{icon}</span>
