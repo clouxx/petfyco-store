@@ -88,6 +88,9 @@ export default function Navbar() {
               <Link href="/#nosotros" className="text-navy font-semibold hover:text-primary transition-colors text-sm">
                 Nosotros
               </Link>
+              <Link href="/contacto" className="text-navy font-semibold hover:text-primary transition-colors text-sm">
+                Contacto
+              </Link>
               {admin && (
                 <Link
                   href="/admin"
@@ -192,6 +195,7 @@ export default function Navbar() {
               { href: '/', label: 'Inicio' },
               { href: '/productos', label: 'Productos' },
               { href: '/#nosotros', label: 'Nosotros' },
+              { href: '/contacto', label: 'Contacto' },
             ].map(({ href, label }) => (
               <Link
                 key={href}
