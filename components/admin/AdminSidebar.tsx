@@ -51,7 +51,15 @@ export default function AdminSidebar() {
       {/* Logo */}
       <div className={`flex items-center h-20 px-4 border-b border-white/10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
         {collapsed ? (
-          <span className="text-xl flex-shrink-0">🐾</span>
+          <Image
+            src="/petfyco_nutricion_sin_fondo.png"
+            alt="PetfyCo"
+            width={36}
+            height={36}
+            className="object-contain flex-shrink-0"
+            style={{ filter: 'drop-shadow(0 0 3px white) drop-shadow(0 0 6px white) drop-shadow(0 0 10px rgba(255,255,255,0.6))' }}
+            priority
+          />
         ) : (
           <div className="flex flex-col items-start py-2">
             <Image

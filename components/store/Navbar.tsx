@@ -62,7 +62,7 @@ export default function Navbar() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[96px] overflow-hidden">
+          <div className="flex items-center justify-between h-[110px] overflow-hidden">
 
             {/* Logo */}
             <Link href="/" className="flex items-center flex-shrink-0">
@@ -70,7 +70,7 @@ export default function Navbar() {
               <img
                 src="/petfyco_nutricion_sin_fondo.png"
                 alt="PetfyCo"
-                style={{ height: '86px', width: 'auto', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2)) contrast(1.1)' }}
+                style={{ height: '100px', width: 'auto', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2)) contrast(1.1)' }}
               />
             </Link>
 
