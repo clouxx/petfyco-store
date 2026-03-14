@@ -115,7 +115,7 @@ export default function HomePage() {
               <div className="absolute inset-0 rounded-full bg-white/25 blur-3xl scale-110" />
               {/* Burbuja blanca que da contraste al texto del logo */}
               <div className="relative bg-white/15 backdrop-blur-sm rounded-[40%] p-6 border border-white/20 shadow-2xl">
-                <Image src="/petfyco_nutricion.png" alt="PetfyCo" width={400} height={400}
+                <Image src="/petfyco_nutricion_sin_fondo.png" alt="PetfyCo" width={400} height={400}
                   className="animate-float drop-shadow-xl" priority />
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function HomePage() {
             </div>
           ) : featured.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl shadow-card">
-              <Image src="/petfyco_nutricion.png" alt="" width={120} height={120} className="mx-auto mb-4 opacity-70"/>
+              <Image src="/petfyco_nutricion_sin_fondo.png" alt="" width={120} height={120} className="mx-auto mb-4 opacity-70"/>
               <p className="text-navy font-bold text-xl">¡Pronto tendremos productos!</p>
               <p className="text-petfy-grey-text mt-2">Ejecuta el schema.sql en Supabase para ver el catálogo</p>
               <Link href="/admin" className="inline-flex items-center gap-2 bg-primary text-white font-bold px-6 py-3 rounded-full mt-6 hover:brightness-110 transition-all">
@@ -233,7 +233,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="relative flex justify-center order-2 lg:order-1">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 rounded-[3rem] blur-3xl"/>
-            <Image src="/petfyco_nutricion.png" alt="PetfyCo" width={380} height={380}
+            <Image src="/petfyco_nutricion_sin_fondo.png" alt="PetfyCo" width={380} height={380}
               className="relative animate-float-slow drop-shadow-xl"/>
           </div>
           <div className="order-1 lg:order-2">

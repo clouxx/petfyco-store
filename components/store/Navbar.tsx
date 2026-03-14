@@ -67,7 +67,7 @@ export default function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center flex-shrink-0">
               <Image
-                src="/petfyco_nutricion.png"
+                src="/petfyco_nutricion_sin_fondo.png"
                 alt="PetfyCo"
                 width={180}
                 height={72}

@@ -13,7 +13,7 @@ export default function Footer() {
           <div className="lg:col-span-1">
             {/* Logo con fondo blanco suave para que el texto del logo sea legible */}
             <div className="mb-4 inline-block bg-white/10 rounded-2xl p-3">
-              <Image src="/petfyco_nutricion.png" alt="PetfyCo" width={140} height={56} className="object-contain brightness-125" />
+              <Image src="/petfyco_nutricion_sin_fondo.png" alt="PetfyCo" width={140} height={56} className="object-contain brightness-125" />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
               La mejor tienda para tus mascotas. Productos premium con amor y cuidado para tu compañero peludo.

@@ -61,7 +61,7 @@ export default function RegistroPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex flex-col items-center">
             <Image
-              src="/petfyco_nutricion.png"
+              src="/petfyco_nutricion_sin_fondo.png"
               alt="PetfyCo"
               width={200}
               height={80}
