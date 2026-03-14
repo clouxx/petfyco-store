@@ -65,6 +65,19 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'petfyco-cart',
+      storage: {
+        getItem: (name) => {
+          if (typeof window === 'undefined') return null;
+          const str = localStorage.getItem(name);
+          return str ? JSON.parse(str) : null;
+        },
+        setItem: (name, value) => {
+          if (typeof window !== 'undefined') localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          if (typeof window !== 'undefined') localStorage.removeItem(name);
+        },
+      },
     }
   )
 );

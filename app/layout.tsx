@@ -14,11 +14,13 @@ export const metadata: Metadata = {
   description:
     'PetfyCo es la tienda en línea colombiana especializada en productos premium para mascotas. Nutrición, higiene, accesorios y más con envío a toda Colombia.',
   keywords: 'mascotas, perros, gatos, nutrición, higiene, accesorios, Colombia, tienda online',
+  icons: { icon: '/favicon.png', apple: '/favicon.png' },
   openGraph: {
     title: 'PetfyCo Tienda | Nutrición y Limpieza para Mascotas',
     description: 'Productos premium para tus mascotas con envío a toda Colombia.',
     type: 'website',
     locale: 'es_CO',
+    images: [{ url: '/logo.png', width: 400, height: 160, alt: 'PetfyCo' }],
   },
 };
 
@@ -39,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             },
             success: {
               iconTheme: {
-                primary: '#4CB5F9',
+                primary: '#2D7A2D',
                 secondary: '#fff',
               },
             },

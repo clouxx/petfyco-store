@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { Instagram, Facebook, Twitter, Youtube, Mail } from 'lucide-react';
 
 export default function Footer() {
@@ -8,9 +11,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand Column */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🐾</span>
-              <span className="text-2xl font-extrabold text-primary">PetfyCo</span>
+            {/* Logo con fondo blanco suave para que el texto del logo sea legible */}
+            <div className="mb-4 inline-block bg-white/10 rounded-2xl p-3">
+              <Image src="/petfyco_nutricion.png" alt="PetfyCo" width={140} height={56} className="object-contain brightness-125" />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
               La mejor tienda para tus mascotas. Productos premium con amor y cuidado para tu compañero peludo.

@@ -7,14 +7,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#4CB5F9',
-        navy: '#2D2D2D',
-        accent: '#56C4F2',
-        'petfy-orange': '#FF9800',
-        'petfy-pink': '#E91E63',
-        'petfy-bg': '#F5F5F7',
-        'petfy-grey': '#F3F6F9',
-        'petfy-grey-text': '#757575',
+        primary: '#2D7A2D',     /* verde oscuro del logo */
+        accent:  '#E8811F',     /* naranja del logo */
+        navy:    '#1A3D1A',     /* verde muy oscuro para textos */
+        'petfy-green-light': '#7EC87E',  /* verde suave del logo */
+        'petfy-orange': '#E8811F',
+        'petfy-bg': '#F5F8F5',
+        'petfy-grey': '#F3F6F3',
+        'petfy-grey-text': '#6B7B6B',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'Inter', 'sans-serif'],
