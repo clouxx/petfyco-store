@@ -72,6 +72,7 @@ export default function Navbar() {
                 width={180}
                 height={72}
                 className="object-contain object-center"
+                style={{ filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.8)) drop-shadow(0 0 1px rgba(255,255,255,0.8))' }}
                 priority
               />
             </Link>
