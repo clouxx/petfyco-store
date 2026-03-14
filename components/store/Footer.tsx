@@ -13,7 +13,7 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <div className="mb-4">
               <Image src="/petfyco_nutricion_sin_fondo.png" alt="PetfyCo" width={160} height={64} className="object-contain"
-                style={{ filter: 'drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 0 8px rgba(255,255,255,0.3))' }} />
+                style={{ filter: 'drop-shadow(0 0 3px white) drop-shadow(0 0 3px white) drop-shadow(0 0 6px white) drop-shadow(0 0 10px white) drop-shadow(0 0 16px rgba(255,255,255,0.6))' }} />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
               La mejor tienda para tus mascotas. Productos premium con amor y cuidado para tu compañero peludo.

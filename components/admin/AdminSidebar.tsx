@@ -60,7 +60,7 @@ export default function AdminSidebar() {
               width={140}
               height={56}
               className="object-contain"
-              style={{ filter: 'drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 0 1px white)' }}
+              style={{ filter: 'drop-shadow(0 0 3px white) drop-shadow(0 0 3px white) drop-shadow(0 0 6px white) drop-shadow(0 0 10px white) drop-shadow(0 0 16px rgba(255,255,255,0.6))' }}
               priority
             />
             <p className="text-xs text-gray-400 leading-none -mt-1 pl-1">Admin Panel</p>
