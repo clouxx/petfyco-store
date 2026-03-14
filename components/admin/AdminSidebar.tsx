@@ -49,21 +49,21 @@ export default function AdminSidebar() {
       } flex-shrink-0`}
     >
       {/* Logo */}
-      <div className={`flex items-center h-16 px-4 border-b border-white/10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+      <div className={`flex items-center h-20 px-4 border-b border-white/10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
         {collapsed ? (
           <span className="text-xl flex-shrink-0">🐾</span>
         ) : (
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start py-2">
             <Image
               src="/petfyco_nutricion_sin_fondo.png"
               alt="PetfyCo"
-              width={140}
-              height={56}
+              width={130}
+              height={52}
               className="object-contain"
               style={{ filter: 'drop-shadow(0 0 3px white) drop-shadow(0 0 3px white) drop-shadow(0 0 6px white) drop-shadow(0 0 10px white) drop-shadow(0 0 16px rgba(255,255,255,0.6))' }}
               priority
             />
-            <p className="text-xs text-gray-400 leading-none -mt-1 pl-1">Admin Panel</p>
+            <p className="text-xs text-gray-400 leading-none pl-1">Admin Panel</p>
           </div>
         )}
       </div>

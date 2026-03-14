@@ -65,12 +65,12 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-[80px]">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center flex-shrink-0">
+            <Link href="/" className="flex items-center flex-shrink-0 py-2 px-1">
               <Image
                 src="/petfyco_nutricion_sin_fondo.png"
                 alt="PetfyCo"
-                width={180}
-                height={72}
+                width={160}
+                height={60}
                 className="object-contain object-center"
                 style={{ filter: 'drop-shadow(0 0 3px white) drop-shadow(0 0 6px white) drop-shadow(0 0 10px white) drop-shadow(0 0 16px rgba(255,255,255,0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
                 priority
