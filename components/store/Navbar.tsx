@@ -70,7 +70,7 @@ export default function Navbar() {
               <img
                 src="/petfyco_nutricion_sin_fondo.png"
                 alt="PetfyCo"
-                style={{ height: '58px', width: 'auto', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2)) contrast(1.1)' }}
+                style={{ height: '72px', width: 'auto', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2)) contrast(1.1)' }}
               />
             </Link>
 
