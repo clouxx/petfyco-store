@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   LayoutDashboard,
   Package,
@@ -49,11 +50,20 @@ export default function AdminSidebar() {
     >
       {/* Logo */}
       <div className={`flex items-center h-16 px-4 border-b border-white/10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-        <span className="text-xl flex-shrink-0">🐾</span>
-        {!collapsed && (
-          <div>
-            <span className="font-extrabold text-primary text-lg">PetfyCo</span>
-            <p className="text-xs text-gray-400 leading-none">Admin Panel</p>
+        {collapsed ? (
+          <span className="text-xl flex-shrink-0">🐾</span>
+        ) : (
+          <div className="flex flex-col items-start">
+            <Image
+              src="/petfyco_nutricion_sin_fondo.png"
+              alt="PetfyCo"
+              width={140}
+              height={56}
+              className="object-contain"
+              style={{ filter: 'drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 0 1px white)' }}
+              priority
+            />
+            <p className="text-xs text-gray-400 leading-none -mt-1 pl-1">Admin Panel</p>
           </div>
         )}
       </div>
