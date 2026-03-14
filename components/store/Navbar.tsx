@@ -66,14 +66,11 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center flex-shrink-0">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/petfyco_nutricion_sin_fondo.png"
                 alt="PetfyCo"
-                width={150}
-                height={50}
-                className="object-contain object-center"
-                style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2)) contrast(1.1)' }}
-                priority
+                style={{ height: '58px', width: 'auto', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2)) contrast(1.1)' }}
               />
             </Link>
 
