@@ -111,7 +111,9 @@ export default function HomePage() {
 
           <div className="hidden lg:flex items-center justify-center animate-fade-in delay-300">
             <Image src="/petfyco_nutricion_sin_fondo.png" alt="PetfyCo" width={420} height={420}
-              className="animate-float drop-shadow-2xl" priority />
+              className="animate-float"
+              style={{ filter: 'drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 4px 24px rgba(0,0,0,0.3))' }}
+              priority />
           </div>
         </div>
 
