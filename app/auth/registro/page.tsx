@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Image from 'next/image';
 import { Eye, EyeOff, User, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
@@ -58,10 +59,15 @@ export default function RegistroPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex flex-col items-center gap-2">
-            <span className="text-5xl">🐾</span>
-            <span className="text-3xl font-extrabold text-primary">PetfyCo</span>
-            <span className="text-sm text-petfy-grey-text">Tienda</span>
+          <Link href="/" className="inline-flex flex-col items-center">
+            <Image
+              src="/petfyco_nutricion.png"
+              alt="PetfyCo"
+              width={200}
+              height={80}
+              className="object-contain"
+              priority
+            />
           </Link>
         </div>
 
