@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
@@ -91,10 +91,31 @@ export default function CheckoutPage() {
   const cartTotal = total();
   const isFreeShipping = cartTotal >= FREE_SHIPPING;
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<BillingData>({
+  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<BillingData>({
     resolver: zodResolver(billingSchema),
     defaultValues: { billing_id_type: 'CC', delivery_same: true },
   });
+
+  // Pre-llenar formulario desde profiles si el usuario está autenticado
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, email, phone, depto, municipio')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      if (!profile) return;
+      reset((prev) => ({
+        ...prev,
+        billing_name: profile.display_name || prev.billing_name || '',
+        billing_email: profile.email || session.user.email || prev.billing_email || '',
+        billing_phone: profile.phone || prev.billing_phone || '',
+        billing_depto: profile.depto || prev.billing_depto || '',
+        billing_city: profile.municipio || prev.billing_city || '',
+      }));
+    });
+  }, [reset]);
 
   const deliverySame = watch('delivery_same');
   const billingCity = watch('billing_city');
