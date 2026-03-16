@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   FileText,
   BarChart3,
+  Tag,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -21,6 +22,7 @@ import { supabase } from '@/lib/supabase';
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/catalogo', label: 'Catálogo', icon: Package },
+  { href: '/admin/categorias', label: 'Categorías', icon: Tag },
   { href: '/admin/inventario', label: 'Inventario', icon: Warehouse },
   { href: '/admin/pedidos', label: 'Pedidos', icon: ShoppingBag },
   { href: '/admin/facturacion', label: 'Facturación', icon: FileText },

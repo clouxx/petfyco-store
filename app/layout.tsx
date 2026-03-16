@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import './globals.css';
 
 const inter = Inter({
@@ -25,10 +26,12 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
   return (
     <html lang="es" className={inter.variable}>
       <body className="font-sans">
         {children}
+        {gaId && <GoogleAnalytics gaId={gaId} />}
         <Toaster
           position="top-right"
           toastOptions={{

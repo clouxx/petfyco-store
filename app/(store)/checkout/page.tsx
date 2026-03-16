@@ -13,26 +13,32 @@ import { supabase, formatCOP } from '@/lib/supabase';
 import { useCartStore } from '@/lib/cart-store';
 import toast from 'react-hot-toast';
 
-// Municipios dentro de la zona de cobertura
+// Municipios dentro de la zona de cobertura (negocio con base en Sabaneta)
+const SABANETA = ['sabaneta'];
 const MEDELLIN = ['medellín', 'medellin'];
-const METRO_MUNICIPALITIES = ['bello', 'itagüí', 'itagui', 'envigado', 'sabaneta', 'la estrella', 'copacabana'];
+const METRO_CLOSE = ['itagüí', 'itagui', 'envigado', 'la estrella'];
+const METRO_FAR = ['bello', 'copacabana'];
 
-type CoverageStatus = 'medellin' | 'metro' | 'outside' | 'unknown';
+type CoverageStatus = 'sabaneta' | 'medellin' | 'metro_close' | 'metro_far' | 'outside' | 'unknown';
 
 function getCoverageStatus(city: string, depto: string): CoverageStatus {
   if (!city || !depto) return 'unknown';
   if (depto !== 'Antioquia') return 'outside';
   const normalized = city.toLowerCase().trim();
+  if (SABANETA.includes(normalized)) return 'sabaneta';
   if (MEDELLIN.includes(normalized)) return 'medellin';
-  if (METRO_MUNICIPALITIES.includes(normalized)) return 'metro';
+  if (METRO_CLOSE.includes(normalized)) return 'metro_close';
+  if (METRO_FAR.includes(normalized)) return 'metro_far';
   return 'outside';
 }
 
 const COVERAGE_LABELS: Record<CoverageStatus, { text: string; sub: string; color: string; Icon: React.ElementType }> = {
-  medellin: { text: '¡Zona de cobertura!', sub: 'Medellín — entrega en 1 día hábil', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
-  metro:    { text: '¡Zona de cobertura!', sub: 'Área metropolitana — 1 a 2 días hábiles', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
-  outside:  { text: 'Fuera de cobertura', sub: 'Solo enviamos al área metropolitana de Medellín. Contáctanos por WhatsApp para verificar.', color: 'bg-orange-50 border-orange-300 text-orange-700', Icon: AlertTriangle },
-  unknown:  { text: 'Ingresa ciudad y departamento', sub: 'Verificaremos si hay cobertura en tu zona.', color: 'bg-gray-50 border-gray-200 text-petfy-grey-text', Icon: MapPin },
+  sabaneta:    { text: '¡Zona de cobertura!', sub: 'Sabaneta — entrega el mismo día o siguiente día hábil', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
+  medellin:    { text: '¡Zona de cobertura!', sub: 'Medellín — entrega en 1 día hábil', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
+  metro_close: { text: '¡Zona de cobertura!', sub: 'Área metropolitana cercana — 1 a 2 días hábiles', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
+  metro_far:   { text: '¡Zona de cobertura!', sub: 'Área metropolitana — 1 a 2 días hábiles', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
+  outside:     { text: 'Fuera de cobertura', sub: 'Solo enviamos al área metropolitana de Medellín. Contáctanos por WhatsApp para verificar.', color: 'bg-orange-50 border-orange-300 text-orange-700', Icon: AlertTriangle },
+  unknown:     { text: 'Ingresa ciudad y departamento', sub: 'Verificaremos si hay cobertura en tu zona.', color: 'bg-gray-50 border-gray-200 text-petfy-grey-text', Icon: MapPin },
 };
 
 const COLOMBIA_DEPTOS = [
@@ -67,10 +73,12 @@ type Step = 1 | 2 | 3;
 
 const FREE_SHIPPING = 150000;
 const SHIPPING_BY_ZONE: Record<CoverageStatus, number> = {
-  medellin: 8000,
-  metro:    10000,
-  outside:  12000,
-  unknown:  8000,
+  sabaneta:    5000,
+  medellin:    8000,
+  metro_close: 8000,
+  metro_far:   10000,
+  outside:     12000,
+  unknown:     8000,
 };
 
 export default function CheckoutPage() {
@@ -400,8 +408,10 @@ export default function CheckoutPage() {
                       <div className="flex-1">
                         <p className="font-semibold text-navy text-sm">Envío a domicilio</p>
                         <p className="text-xs text-petfy-grey-text">
+                          {coverageStatus === 'sabaneta' && 'Sabaneta — mismo día o siguiente día hábil'}
                           {coverageStatus === 'medellin' && 'Medellín — 1 día hábil'}
-                          {coverageStatus === 'metro' && 'Área metropolitana — 1 a 2 días hábiles'}
+                          {coverageStatus === 'metro_close' && 'Área metropolitana cercana — 1 a 2 días hábiles'}
+                          {coverageStatus === 'metro_far' && 'Área metropolitana — 1 a 2 días hábiles'}
                           {(coverageStatus === 'outside' || coverageStatus === 'unknown') && '1 a 3 días hábiles'}
                         </p>
                       </div>

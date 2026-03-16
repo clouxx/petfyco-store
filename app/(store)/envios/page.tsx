@@ -48,8 +48,9 @@ export default function EnviosPage() {
               <h2 className="text-lg font-bold text-navy">1. Zona de Cobertura</h2>
             </div>
             <p className="text-petfy-grey-text text-sm leading-relaxed">
-              PetfyCo realiza entregas a domicilio exclusivamente en <strong>Medellín y su área metropolitana</strong>,
-              que incluye los municipios de <strong>Bello, Itagüí, Envigado, Sabaneta, La Estrella y Copacabana</strong>.
+              PetfyCo tiene su base de operaciones en <strong>Sabaneta</strong> y realiza entregas a domicilio
+              en <strong>Medellín y su área metropolitana</strong>, que incluye los municipios de{' '}
+              <strong>Sabaneta, Itagüí, Envigado, La Estrella, Bello y Copacabana</strong>.
             </p>
             <p className="text-petfy-grey-text text-sm leading-relaxed">
               Si tu dirección está fuera de esta zona de cobertura, te recomendamos contactarnos por WhatsApp antes
@@ -67,26 +68,38 @@ export default function EnviosPage() {
               <table className="w-full text-sm">
                 <thead className="bg-petfy-bg">
                   <tr>
-                    <th className="text-left px-5 py-3 text-navy font-bold">Valor del pedido</th>
+                    <th className="text-left px-5 py-3 text-navy font-bold">Zona</th>
+                    <th className="text-left px-5 py-3 text-navy font-bold">Municipios</th>
                     <th className="text-left px-5 py-3 text-navy font-bold">Costo de envío</th>
+                    <th className="text-left px-5 py-3 text-navy font-bold">Tiempo estimado</th>
                   </tr>
                 </thead>
                 <tbody>
+                  <tr className="border-t border-gray-100 bg-green-50">
+                    <td className="px-5 py-3 font-semibold text-green-700">Zona base</td>
+                    <td className="px-5 py-3 text-navy">Sabaneta</td>
+                    <td className="px-5 py-3 font-bold text-green-700">$5.000</td>
+                    <td className="px-5 py-3 text-petfy-grey-text">Mismo día o 1 día hábil</td>
+                  </tr>
                   <tr className="border-t border-gray-100">
-                    <td className="px-5 py-3 text-petfy-grey-text">Menos de $150.000</td>
-                    <td className="px-5 py-3 text-petfy-grey-text">$8.000 – $12.000 según zona</td>
+                    <td className="px-5 py-3 font-semibold text-navy">Zona 1</td>
+                    <td className="px-5 py-3 text-petfy-grey-text">Medellín, Itagüí, Envigado, La Estrella</td>
+                    <td className="px-5 py-3 text-petfy-grey-text">$8.000</td>
+                    <td className="px-5 py-3 text-petfy-grey-text">1 día hábil</td>
+                  </tr>
+                  <tr className="border-t border-gray-100">
+                    <td className="px-5 py-3 font-semibold text-navy">Zona 2</td>
+                    <td className="px-5 py-3 text-petfy-grey-text">Bello, Copacabana</td>
+                    <td className="px-5 py-3 text-petfy-grey-text">$10.000</td>
+                    <td className="px-5 py-3 text-petfy-grey-text">1 a 2 días hábiles</td>
                   </tr>
                   <tr className="border-t border-gray-100 bg-green-50">
-                    <td className="px-5 py-3 text-navy font-semibold">$150.000 o más</td>
-                    <td className="px-5 py-3 text-primary font-bold">¡Envío GRATIS!</td>
+                    <td className="px-5 py-3 text-navy font-semibold" colSpan={2}>Compras de $150.000 o más</td>
+                    <td className="px-5 py-3 text-primary font-bold" colSpan={2}>¡Envío GRATIS en todas las zonas!</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-petfy-grey-text">
-              * Los costos de envío pueden variar según la zona específica dentro del área metropolitana.
-              El valor exacto se confirmará al momento de procesar tu pedido.
-            </p>
           </section>
 
           {/* Tiempos de entrega */}
@@ -100,16 +113,20 @@ export default function EnviosPage() {
             </p>
             <ul className="space-y-2 text-sm text-petfy-grey-text">
               <li className="flex items-start gap-2">
-                <span className="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-                <span><strong className="text-navy">Medellín (zona urbana):</strong> 1 día hábil.</span>
+                <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                <span><strong className="text-navy">Sabaneta (zona base):</strong> Mismo día (pedidos antes de las 12 m.) o siguiente día hábil.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
-                <span><strong className="text-navy">Área metropolitana:</strong> 1 a 2 días hábiles.</span>
+                <span><strong className="text-navy">Medellín, Itagüí, Envigado, La Estrella:</strong> 1 día hábil.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
-                <span><strong className="text-navy">Zonas con dificultad de acceso:</strong> hasta 3 días hábiles.</span>
+                <span><strong className="text-navy">Bello, Copacabana:</strong> 1 a 2 días hábiles.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">4</span>
+                <span><strong className="text-navy">Zonas con dificultad de acceso:</strong> hasta 3 días hábiles (coordinación previa).</span>
               </li>
             </ul>
             <p className="text-petfy-grey-text text-sm leading-relaxed">
