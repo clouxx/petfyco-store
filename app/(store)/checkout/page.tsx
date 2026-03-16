@@ -57,6 +57,8 @@ const billingSchema = z.object({
   delivery_address: z.string().optional(),
   delivery_city: z.string().optional(),
   delivery_depto: z.string().optional(),
+  legal_accepted: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar los Términos y Condiciones para continuar' }) }),
+  privacy_accepted: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar la Política de Privacidad para continuar' }) }),
 });
 
 type BillingData = z.infer<typeof billingSchema>;
@@ -316,6 +318,48 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Aceptación legal — Ley 1480 y Ley 1581 */}
+              <div className="border-t border-gray-100 pt-4 space-y-3">
+                <div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      {...register('legal_accepted')}
+                      className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4 mt-0.5 flex-shrink-0"
+                    />
+                    <span className="text-sm text-navy">
+                      He leído y acepto los{' '}
+                      <a href="/terminos" target="_blank" className="text-primary underline font-semibold">
+                        Términos y Condiciones
+                      </a>
+                      {' '}de compra (Ley 1480 — Estatuto del Consumidor) *
+                    </span>
+                  </label>
+                  {errors.legal_accepted && (
+                    <p className="text-red-500 text-xs mt-1 ml-7">{errors.legal_accepted.message as string}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      {...register('privacy_accepted')}
+                      className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4 mt-0.5 flex-shrink-0"
+                    />
+                    <span className="text-sm text-navy">
+                      Acepto el tratamiento de mis datos personales según la{' '}
+                      <a href="/privacidad" target="_blank" className="text-primary underline font-semibold">
+                        Política de Privacidad
+                      </a>
+                      {' '}(Ley 1581 de 2012) *
+                    </span>
+                  </label>
+                  {errors.privacy_accepted && (
+                    <p className="text-red-500 text-xs mt-1 ml-7">{errors.privacy_accepted.message as string}</p>
+                  )}
+                </div>
+              </div>
+
               <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 py-4">
                 Continuar
                 <ChevronRight size={18} />
@@ -397,6 +441,21 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Derecho de retracto — Ley 1480 Art. 47 */}
+              <div className="flex items-start gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs leading-relaxed">
+                <span className="text-lg flex-shrink-0">ℹ️</span>
+                <div>
+                  <p className="font-semibold mb-0.5">Derecho de retracto (Ley 1480, Art. 47)</p>
+                  <p>
+                    Tienes derecho a retractarte de la compra dentro de los <strong>5 días hábiles</strong> siguientes a la entrega del producto,
+                    sin necesidad de justificación y sin penalización, siempre que el producto no haya sido abierto o dañado.
+                    Para ejercer este derecho contáctanos a{' '}
+                    <a href="mailto:soporte@petfyco.com" className="underline font-semibold">soporte@petfyco.com</a>{' '}
+                    o por WhatsApp.
+                  </p>
+                </div>
+              </div>
+
               <div className="flex gap-3">
                 <button onClick={() => setStep(1)} className="btn-secondary flex-1 text-sm py-3.5">
                   Editar datos
@@ -414,6 +473,20 @@ export default function CheckoutPage() {
             <div className="space-y-5">
               <div className="bg-white rounded-2xl shadow-card p-8">
                 <h2 className="text-xl font-bold text-navy mb-6">Método de pago</h2>
+
+                {/* Aviso legal antes del pago — Ley 1480 */}
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-200 text-xs text-petfy-grey-text leading-relaxed mb-6">
+                  <span className="text-base flex-shrink-0">🔒</span>
+                  <p>
+                    Al completar tu pago confirmas que eres mayor de edad, que has leído y aceptado los{' '}
+                    <a href="/terminos" target="_blank" className="text-primary underline font-semibold">Términos y Condiciones</a>{' '}
+                    y la{' '}
+                    <a href="/privacidad" target="_blank" className="text-primary underline font-semibold">Política de Privacidad</a>{' '}
+                    de PetfyCo. Vendedor: <strong>PetfyCo S.A.S.</strong> — NIT 901234567-8.
+                    Los precios mostrados incluyen IVA.
+                    En cumplimiento de la Ley 1480 (Estatuto del Consumidor) tienes derecho a retracto dentro de los 5 días hábiles posteriores a la entrega.
+                  </p>
+                </div>
 
                 {/* Wompi */}
                 <div className="border-2 border-primary rounded-2xl p-6 mb-4">
@@ -489,6 +562,7 @@ export default function CheckoutPage() {
                 <span>Total</span>
                 <span className="text-primary">{formatCOP(orderTotal)}</span>
               </div>
+              <p className="text-xs text-petfy-grey-text mt-2">Precios incluyen IVA</p>
             </div>
           </div>
         </div>
