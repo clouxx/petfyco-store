@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     'PetfyCo es la tienda en línea especializada en productos premium para mascotas. Nutrición, higiene, accesorios y más con domicilio en Medellín y su área metropolitana.',
   keywords: 'mascotas, perros, gatos, nutrición, higiene, accesorios, Medellín, domicilio, tienda online',
   icons: { icon: '/favicon.png', apple: '/favicon.png' },
+  verification: { google: 'g9rcM0IAHrAp9lNg6fd-W2Z7EtEcK0OVVc_Khkeo8GA' },
   openGraph: {
     title: 'PetfyCo Tienda | Nutrición y Limpieza para Mascotas',
     description: 'Productos premium para tus mascotas con domicilio en Medellín y su área metropolitana.',
