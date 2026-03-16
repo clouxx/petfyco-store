@@ -27,6 +27,8 @@ export default function PedidosPage() {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -42,8 +44,24 @@ export default function PedidosPage() {
         .order('created_at', { ascending: false });
       setOrders(data || []);
       setLoading(false);
+
+      // Suscripción realtime: actualiza el estado del pedido sin recargar
+      channel = supabase
+        .channel('pedidos-user')
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'store_orders', filter: `user_id=eq.${session.user.id}` },
+          (payload) => {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === payload.new.id ? { ...o, ...payload.new } : o))
+            );
+          }
+        )
+        .subscribe();
     };
+
     init();
+    return () => { channel?.unsubscribe(); };
   }, [router]);
 
   useEffect(() => {
