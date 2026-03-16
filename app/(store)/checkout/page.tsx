@@ -168,6 +168,30 @@ export default function CheckoutPage() {
       const { error: itemsError } = await supabase.from('store_order_items').insert(orderItems);
       if (itemsError) throw itemsError;
 
+      // Email de confirmación — no bloquea el flujo si falla
+      fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_number: order.order_number,
+          billing_name: billingData.billing_name,
+          billing_email: billingData.billing_email,
+          delivery_address: deliverySame ? billingData.billing_address : billingData.delivery_address,
+          delivery_city: deliverySame ? billingData.billing_city : billingData.delivery_city,
+          delivery_depto: deliverySame ? billingData.billing_depto : billingData.delivery_depto,
+          items: orderItems.map((i) => ({
+            product_name: i.product_name,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            subtotal: i.subtotal,
+          })),
+          subtotal: cartTotal,
+          shipping,
+          total: orderTotal,
+          payment_method: paymentMethod,
+        }),
+      }).catch(() => {}); // silencioso — no interrumpe si falla
+
       clearCart();
       toast.success('¡Pedido creado exitosamente!');
       router.push(`/pedidos?order=${order.order_number}`);
