@@ -8,10 +8,32 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Check, ChevronRight, Truck, CreditCard } from 'lucide-react';
+import { Check, ChevronRight, Truck, CreditCard, MapPin, AlertTriangle, XCircle } from 'lucide-react';
 import { supabase, formatCOP } from '@/lib/supabase';
 import { useCartStore } from '@/lib/cart-store';
 import toast from 'react-hot-toast';
+
+// Municipios dentro de la zona de cobertura
+const MEDELLIN = ['medellín', 'medellin'];
+const METRO_MUNICIPALITIES = ['bello', 'itagüí', 'itagui', 'envigado', 'sabaneta', 'la estrella', 'copacabana'];
+
+type CoverageStatus = 'medellin' | 'metro' | 'outside' | 'unknown';
+
+function getCoverageStatus(city: string, depto: string): CoverageStatus {
+  if (!city || !depto) return 'unknown';
+  if (depto !== 'Antioquia') return 'outside';
+  const normalized = city.toLowerCase().trim();
+  if (MEDELLIN.includes(normalized)) return 'medellin';
+  if (METRO_MUNICIPALITIES.includes(normalized)) return 'metro';
+  return 'outside';
+}
+
+const COVERAGE_LABELS: Record<CoverageStatus, { text: string; sub: string; color: string; Icon: React.ElementType }> = {
+  medellin: { text: '¡Zona de cobertura!', sub: 'Medellín — entrega en 1 día hábil', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
+  metro:    { text: '¡Zona de cobertura!', sub: 'Área metropolitana — 1 a 2 días hábiles', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
+  outside:  { text: 'Fuera de cobertura', sub: 'Solo enviamos al área metropolitana de Medellín. Contáctanos por WhatsApp para verificar.', color: 'bg-orange-50 border-orange-300 text-orange-700', Icon: AlertTriangle },
+  unknown:  { text: 'Ingresa ciudad y departamento', sub: 'Verificaremos si hay cobertura en tu zona.', color: 'bg-gray-50 border-gray-200 text-petfy-grey-text', Icon: MapPin },
+};
 
 const COLOMBIA_DEPTOS = [
   'Amazonas','Antioquia','Arauca','Atlántico','Bolívar','Boyacá','Caldas','Caquetá',
@@ -42,20 +64,22 @@ type BillingData = z.infer<typeof billingSchema>;
 type Step = 1 | 2 | 3;
 
 const FREE_SHIPPING = 150000;
-const SHIPPING_COST = 8000;
+const SHIPPING_BY_ZONE: Record<CoverageStatus, number> = {
+  medellin: 8000,
+  metro:    10000,
+  outside:  12000,
+  unknown:  8000,
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, clearCart } = useCartStore();
   const [step, setStep] = useState<Step>(1);
   const [billingData, setBillingData] = useState<BillingData | null>(null);
-  const [deliveryOption, setDeliveryOption] = useState<'domicilio' | 'gratis'>('domicilio');
   const [submitting, setSubmitting] = useState(false);
 
   const cartTotal = total();
   const isFreeShipping = cartTotal >= FREE_SHIPPING;
-  const shipping = isFreeShipping ? 0 : deliveryOption === 'gratis' ? 0 : SHIPPING_COST;
-  const orderTotal = cartTotal + shipping;
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<BillingData>({
     resolver: zodResolver(billingSchema),
@@ -63,6 +87,18 @@ export default function CheckoutPage() {
   });
 
   const deliverySame = watch('delivery_same');
+  const billingCity = watch('billing_city');
+  const billingDepto = watch('billing_depto');
+  const deliveryCity = watch('delivery_city');
+  const deliveryDepto = watch('delivery_depto');
+
+  const activeCity = deliverySame ? billingCity : deliveryCity;
+  const activeDepto = deliverySame ? billingDepto : deliveryDepto;
+  const coverageStatus = getCoverageStatus(activeCity ?? '', activeDepto ?? '');
+  const { text: covText, sub: covSub, color: covColor, Icon: CovIcon } = COVERAGE_LABELS[coverageStatus];
+
+  const shipping = isFreeShipping ? 0 : SHIPPING_BY_ZONE[coverageStatus];
+  const orderTotal = cartTotal + shipping;
 
   const onBillingSubmit = (data: BillingData) => {
     setBillingData(data);
@@ -261,6 +297,25 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* Badge de cobertura */}
+              <div className={`flex items-start gap-3 p-4 rounded-xl border ${covColor}`}>
+                <CovIcon size={18} className="flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold">{covText}</p>
+                  <p className="text-xs mt-0.5 opacity-80">{covSub}</p>
+                  {coverageStatus === 'outside' && (
+                    <a
+                      href="https://wa.me/573177931145?text=Hola%20PetfyCo%2C%20quiero%20verificar%20cobertura%20de%20env%C3%ADo%20a%20mi%20ciudad%20%F0%9F%90%BE"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-2 text-xs font-bold underline"
+                    >
+                      Consultar por WhatsApp →
+                    </a>
+                  )}
+                </div>
+              </div>
+
               <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 py-4">
                 Continuar
                 <ChevronRight size={18} />
@@ -296,28 +351,36 @@ export default function CheckoutPage() {
                 <div className="border-t border-gray-100 pt-5">
                   <h3 className="font-semibold text-navy mb-3">Opción de entrega</h3>
                   <div className="space-y-3">
-                    <label className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryOption === 'domicilio' && !isFreeShipping ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                      <input
-                        type="radio"
-                        value="domicilio"
-                        checked={!isFreeShipping && deliveryOption === 'domicilio'}
-                        onChange={() => setDeliveryOption('domicilio')}
-                        disabled={isFreeShipping}
-                        className="accent-primary"
-                      />
+                    <div className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary bg-blue-50">
                       <Truck size={20} className="text-primary flex-shrink-0" />
                       <div className="flex-1">
                         <p className="font-semibold text-navy text-sm">Envío a domicilio</p>
-                        <p className="text-xs text-petfy-grey-text">3-5 días hábiles</p>
+                        <p className="text-xs text-petfy-grey-text">
+                          {coverageStatus === 'medellin' && 'Medellín — 1 día hábil'}
+                          {coverageStatus === 'metro' && 'Área metropolitana — 1 a 2 días hábiles'}
+                          {(coverageStatus === 'outside' || coverageStatus === 'unknown') && '1 a 3 días hábiles'}
+                        </p>
                       </div>
-                      <span className="font-bold text-navy text-sm">
-                        {isFreeShipping ? <span className="text-green-600">Gratis</span> : formatCOP(SHIPPING_COST)}
+                      <span className="font-bold text-sm">
+                        {isFreeShipping
+                          ? <span className="text-green-600">Gratis</span>
+                          : <span className="text-navy">{formatCOP(SHIPPING_BY_ZONE[coverageStatus])}</span>
+                        }
                       </span>
-                    </label>
+                    </div>
                     {isFreeShipping && (
                       <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-green-400 bg-green-50">
                         <Check size={20} className="text-green-500" />
                         <p className="text-sm font-semibold text-green-700">¡Envío gratis por compra mayor a $150.000!</p>
+                      </div>
+                    )}
+                    {coverageStatus === 'outside' && (
+                      <div className="flex items-start gap-3 p-4 rounded-xl border border-orange-300 bg-orange-50 text-orange-700">
+                        <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                        <p className="text-xs">
+                          Tu ciudad podría estar fuera de nuestra zona de cobertura habitual (Medellín y área metropolitana).
+                          El pedido se creará y te contactaremos por WhatsApp para confirmar el envío.
+                        </p>
                       </div>
                     )}
                   </div>
