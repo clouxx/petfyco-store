@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Plus, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/lib/types';
 import toast from 'react-hot-toast';
 
-export default function NuevoProductoPage() {
+function NuevoProductoForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
@@ -303,5 +303,13 @@ export default function NuevoProductoPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NuevoProductoPage() {
+  return (
+    <Suspense>
+      <NuevoProductoForm />
+    </Suspense>
   );
 }
