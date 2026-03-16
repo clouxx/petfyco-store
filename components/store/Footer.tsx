@@ -2,7 +2,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Instagram, Facebook, Youtube, Mail } from 'lucide-react';
+import { Instagram, Facebook, Youtube, Mail, Phone } from 'lucide-react';
+
+const WA_NUMBER = '573177931145';
+const WA_MSG = encodeURIComponent('Hola PetfyCo 🐾 Tengo una consulta sobre un pedido.');
+const WA_URL = `https://wa.me/${WA_NUMBER}?text=${WA_MSG}`;
 
 export default function Footer() {
   return (
@@ -164,11 +168,15 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-gray-500 text-sm">
-            © 2025 PetfyCo S.A.S. Bogotá, Colombia. NIT 901234567-8
+            © 2026 PetfyCo S.A.S. Medellín, Colombia. NIT 901234567-8
           </p>
           <div className="flex items-center gap-4">
+            <a href={WA_URL} target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 text-gray-500 hover:text-[#25D366] text-xs transition-colors">
+              <Phone size={12} /> +57 317 793 1145
+            </a>
             <Link href="/terminos" className="text-gray-500 hover:text-white text-xs transition-colors">
-              Términos y Condiciones
+              Términos
             </Link>
             <Link href="/privacidad" className="text-gray-500 hover:text-white text-xs transition-colors">
               Privacidad

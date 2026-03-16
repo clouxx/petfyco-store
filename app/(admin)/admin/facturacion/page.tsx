@@ -398,7 +398,7 @@ export default function FacturacionPage() {
               {/* Footer */}
               <div className="border-t border-gray-200 pt-5 text-center text-xs text-petfy-grey-text">
                 <p>Esta factura fue generada electrónicamente por PetfyCo S.A.S.</p>
-                <p>NIT 901234567-8 | Bogotá, Colombia | contacto@petfyco.com</p>
+                <p>NIT 901234567-8 | Medellín, Colombia | contacto@petfyco.com</p>
                 <p className="mt-1">Resolución DIAN No. [Pendiente] | Rango de autorización: [Pendiente]</p>
               </div>
             </div>

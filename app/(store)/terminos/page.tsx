@@ -26,7 +26,7 @@ export default function TerminosPage() {
             <h2 className="text-lg font-bold text-navy">1. Identificación del Responsable</h2>
             <p className="text-petfy-grey-text text-sm leading-relaxed">
               <strong>PetfyCo</strong> es una empresa domiciliada en Colombia que opera la plataforma de comercio
-              electrónico disponible en <span className="text-primary">petfyco-store.vercel.app</span>, dedicada
+              electrónico disponible en <span className="text-primary">petfyco.com</span>, dedicada
               a la prestación de servicios de nutrición y limpieza a domicilio para mascotas. El uso de esta
               plataforma implica la aceptación plena de los presentes Términos y Condiciones, de conformidad
               con la <strong>Ley 527 de 1999</strong> (comercio electrónico) y la{' '}

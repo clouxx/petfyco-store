@@ -34,7 +34,7 @@ export default function PrivacidadPage() {
             <h2 className="text-lg font-bold text-navy">1. Responsable del Tratamiento</h2>
             <p className="text-petfy-grey-text text-sm leading-relaxed">
               <strong>PetfyCo</strong> es el responsable del tratamiento de los datos personales recolectados
-              a través de la plataforma <span className="text-primary">petfyco-store.vercel.app</span>.
+              a través de la plataforma <span className="text-primary">petfyco.com</span>.
               Para ejercer sus derechos o plantear consultas, puede contactarnos a través de los canales
               habilitados en la plataforma.
             </p>
