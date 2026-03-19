@@ -26,12 +26,55 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://petfyco-store.vercel.app/#organization',
+      name: 'PetfyCo',
+      url: 'https://petfyco-store.vercel.app',
+      logo: 'https://petfyco-store.vercel.app/petfyco_nutricion_sin_fondo.png',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '+57-317-793-1145',
+        contactType: 'customer service',
+        availableLanguage: 'Spanish',
+        areaServed: 'CO',
+      },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Medellín',
+        addressRegion: 'Antioquia',
+        addressCountry: 'CO',
+      },
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://petfyco-store.vercel.app/#website',
+      url: 'https://petfyco-store.vercel.app',
+      name: 'PetfyCo Tienda',
+      description: 'Nutrición, higiene y accesorios premium para mascotas con domicilio en Medellín.',
+      publisher: { '@id': 'https://petfyco-store.vercel.app/#organization' },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://petfyco-store.vercel.app/productos?search={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   return (
     <html lang="es" className={inter.variable}>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {pixelId && (
           <script
             dangerouslySetInnerHTML={{

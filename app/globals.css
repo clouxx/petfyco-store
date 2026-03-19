@@ -63,6 +63,15 @@ body {
   animation: shimmer 1.4s infinite;
 }
 
+/* ── Accesibilidad: respeta preferencia de menos movimiento ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-float,
+  .animate-float-slow,
+  .animate-bounce-slow { animation: none !important; }
+}
+
 /* ── Print ── */
 @media print {
   .no-print   { display: none !important; }
