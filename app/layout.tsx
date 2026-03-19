@@ -26,15 +26,17 @@ export const metadata: Metadata = {
   },
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'Organization',
-      '@id': 'https://petfyco-store.vercel.app/#organization',
+      '@id': `${SITE_URL}/#organization`,
       name: 'PetfyCo',
-      url: 'https://petfyco-store.vercel.app',
-      logo: 'https://petfyco-store.vercel.app/petfyco_nutricion_sin_fondo.png',
+      url: SITE_URL,
+      logo: `${SITE_URL}/petfyco_nutricion_sin_fondo.png`,
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+57-317-793-1145',
@@ -51,14 +53,14 @@ const jsonLd = {
     },
     {
       '@type': 'WebSite',
-      '@id': 'https://petfyco-store.vercel.app/#website',
-      url: 'https://petfyco-store.vercel.app',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
       name: 'PetfyCo Tienda',
       description: 'Nutrición, higiene y accesorios premium para mascotas con domicilio en Medellín.',
-      publisher: { '@id': 'https://petfyco-store.vercel.app/#organization' },
+      publisher: { '@id': `${SITE_URL}/#organization` },
       potentialAction: {
         '@type': 'SearchAction',
-        target: 'https://petfyco-store.vercel.app/productos?search={search_term_string}',
+        target: `${SITE_URL}/productos?search={search_term_string}`,
         'query-input': 'required name=search_term_string',
       },
     },

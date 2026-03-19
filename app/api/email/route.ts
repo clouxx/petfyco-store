@@ -138,7 +138,7 @@ function buildOrderConfirmationHtml(order: OrderEmailPayload): string {
             <div style="background:#e8f5e9;border-radius:12px;padding:20px;">
               <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#1A3D1A;">¿Qué sigue ahora?</p>
               <p style="margin:0 0 6px;font-size:13px;color:#444;">✅ Te notificaremos por <strong>WhatsApp</strong> cuando tu pedido salga a domicilio.</p>
-              <p style="margin:0 0 6px;font-size:13px;color:#444;">📦 Puedes consultar el estado en <strong>petfyco-store.vercel.app/pedidos</strong></p>
+              <p style="margin:0 0 6px;font-size:13px;color:#444;">📦 Puedes consultar el estado en <strong>${process.env.NEXT_PUBLIC_SITE_URL ?? 'petfyco-store.vercel.app'}/pedidos</strong></p>
               <p style="margin:0;font-size:13px;color:#444;">📞 ¿Dudas? Escríbenos: <a href="https://wa.me/573177931145" style="color:#2D7A2D;font-weight:600;">WhatsApp</a></p>
             </div>
           </td>
