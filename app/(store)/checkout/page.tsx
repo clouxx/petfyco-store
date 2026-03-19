@@ -138,6 +138,13 @@ export default function CheckoutPage() {
 
   const createOrder = async (paymentMethod: string) => {
     if (!billingData || items.length === 0) return;
+
+    // Guard: Wompi requires the public key to be configured
+    if (paymentMethod === 'wompi' && !process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY) {
+      toast.error('Pago con Wompi no está disponible aún. Usa transferencia bancaria.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const orderNumber = 'PFC-' + Date.now().toString().slice(-8);
@@ -189,7 +196,24 @@ export default function CheckoutPage() {
       const { error: itemsError } = await supabase.from('store_order_items').insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // Email de confirmación — no bloquea el flujo si falla
+      if (paymentMethod === 'wompi') {
+        // Para Wompi: limpiar carrito y redirigir al checkout de Wompi.
+        // El email de confirmación se enviará desde el webhook cuando el pago sea APPROVED.
+        clearCart();
+        const wompiKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY!;
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
+        const params = new URLSearchParams({
+          'public-key': wompiKey,
+          'currency': 'COP',
+          'amount-in-cents': String(orderTotal * 100),
+          'reference': orderNumber,
+          'redirect-url': `${siteUrl}/pago/resultado`,
+        });
+        window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
+        return;
+      }
+
+      // Transferencia bancaria: enviar email de confirmación y redirigir a pedidos
       fetch('/api/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -211,7 +235,7 @@ export default function CheckoutPage() {
           total: orderTotal,
           payment_method: paymentMethod,
         }),
-      }).catch(() => {}); // silencioso — no interrumpe si falla
+      }).catch(() => {});
 
       clearCart();
       toast.success('¡Pedido creado exitosamente!');
