@@ -7,9 +7,18 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 // Browser client — uses cookies so middleware can read the session
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
-// Server-side client (API routes)
+// Server-side client (API routes) — anon key, respects RLS
 export function createClient() {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Admin client — service role key, bypasses RLS. Solo para uso server-side.
+export function createAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY not configured');
+  return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
 export const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')

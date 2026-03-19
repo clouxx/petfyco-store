@@ -78,6 +78,17 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createClient();
 
+    // B2 — idempotency: no reprocessar si ya fue aprobado
+    const { data: existing } = await supabase
+      .from('store_orders')
+      .select('payment_status')
+      .eq('order_number', reference)
+      .maybeSingle();
+
+    if (existing?.payment_status === 'approved') {
+      return NextResponse.json({ received: true });
+    }
+
     await supabase
       .from('store_orders')
       .update({ payment_status: status.toLowerCase(), status: orderStatus })

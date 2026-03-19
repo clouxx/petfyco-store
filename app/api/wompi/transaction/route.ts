@@ -44,9 +44,20 @@ export async function GET(req: NextRequest) {
     const status: string = tx?.status ?? 'ERROR';
     const reference: string = tx?.reference ?? '';
 
-    // Actualizar estado del pedido en Supabase
+    // B3 — verificar que la referencia existe en nuestra BD antes de actualizar
     if (reference) {
       const supabase = createClient();
+
+      const { data: knownOrder } = await supabase
+        .from('store_orders')
+        .select('order_number')
+        .eq('order_number', reference)
+        .maybeSingle();
+
+      if (!knownOrder) {
+        console.error('Transaction reference not found in DB:', reference);
+        return NextResponse.json({ error: 'Unknown reference' }, { status: 404 });
+      }
       const orderStatus =
         status === 'APPROVED' ? 'confirmed' :
         status === 'DECLINED' || status === 'VOIDED' ? 'cancelled' :

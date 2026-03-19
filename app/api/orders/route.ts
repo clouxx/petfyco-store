@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import { createAdminClient } from '@/lib/supabase';
 import { rateLimit, getIp } from '@/lib/rate-limit';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Lógica de cobertura replicada server-side (fuente de verdad)
 const FREE_SHIPPING = 150_000;
@@ -75,12 +79,26 @@ export async function POST(req: NextRequest) {
     delivery_depto?: string;
   };
 
+  // Obtener user_id verificado server-side (B1 fix — no confiar en el cliente)
+  const cookieStore = await cookies();
+  const supabaseUser = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
+  const { data: { session } } = await supabaseUser.auth.getSession();
+  const serverUserId = session?.user?.id ?? null;
+
   // Validar estructura básica
   if (!Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: 'No items' }, { status: 400 });
   }
   if (!billing?.billing_email || !billing?.billing_name) {
     return NextResponse.json({ error: 'Missing billing data' }, { status: 400 });
+  }
+  // B5 — validar formato email
+  if (!EMAIL_REGEX.test(billing.billing_email as string)) {
+    return NextResponse.json({ error: 'Email inválido' }, { status: 400 });
   }
   if (!['wompi', 'transferencia'].includes(payment_method)) {
     return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 });
@@ -93,7 +111,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   // Obtener precios reales desde la BD — nunca confiar en el cliente
   const productIds = items.map((i) => i.product_id);
@@ -145,6 +163,7 @@ export async function POST(req: NextRequest) {
     .from('store_orders')
     .insert({
       order_number:       orderNumber,
+      user_id:            serverUserId,
       status:             'pending',
       subtotal,
       discount:           0,
