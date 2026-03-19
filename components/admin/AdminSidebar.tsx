@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  Store,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -96,6 +97,18 @@ export default function AdminSidebar() {
           </Link>
         ))}
       </nav>
+
+      {/* Go to store */}
+      <div className="px-2 pb-1">
+        <Link
+          href="/productos"
+          title={collapsed ? 'Ir a la tienda' : undefined}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors text-sm ${collapsed ? 'justify-center' : ''}`}
+        >
+          <Store size={18} className="flex-shrink-0" />
+          {!collapsed && <span>Ir a la tienda</span>}
+        </Link>
+      </div>
 
       {/* Collapse button */}
       <div className="px-2 pb-2">
