@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
@@ -22,18 +21,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${siteUrl}/auth/login`);
   }
 
-  const cookieStore = await cookies();
+  const response = NextResponse.redirect(`${siteUrl}${safeRedirect}`);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return cookieStore.getAll(); },
+        getAll() {
+          return req.cookies.getAll();
+        },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
@@ -42,9 +43,8 @@ export async function GET(req: NextRequest) {
   const { data } = await supabase.auth.exchangeCodeForSession(code);
   const email = data.user?.email ?? '';
 
-  if (ADMIN_EMAILS.includes(email)) {
-    return NextResponse.redirect(`${siteUrl}/admin`);
-  }
-
-  return NextResponse.redirect(`${siteUrl}${safeRedirect}`);
+  const destination = ADMIN_EMAILS.includes(email) ? '/admin' : safeRedirect;
+  return NextResponse.redirect(`${siteUrl}${destination}`, {
+    headers: response.headers,
+  });
 }
