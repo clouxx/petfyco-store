@@ -64,7 +64,10 @@ export async function GET(req: NextRequest) {
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
           fetch(`${siteUrl}/api/email`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-internal-secret': process.env.INTERNAL_API_SECRET ?? '',
+            },
             body: JSON.stringify({
               order_number: order.order_number,
               billing_name: order.billing_name,
@@ -90,7 +93,7 @@ export async function GET(req: NextRequest) {
       payment_method: tx?.payment_method_type,
     });
   } catch (err) {
-    console.error('Transaction check error:', err);
+    console.error('Transaction check error:', err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: 'Failed to fetch transaction' }, { status: 500 });
   }
 }

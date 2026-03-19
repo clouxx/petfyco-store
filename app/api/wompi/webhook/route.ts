@@ -12,21 +12,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  // Validar firma si WOMPI_EVENTS_SECRET está configurado
+  // Validar firma — OBLIGATORIO. Sin secret configurado el webhook no opera.
   const eventsSecret = process.env.WOMPI_EVENTS_SECRET;
-  if (eventsSecret) {
-    const checksum = req.headers.get('x-event-checksum') ?? '';
-    const timestamp = req.headers.get('x-event-timestamp') ?? '';
+  if (!eventsSecret) {
+    console.error('Webhook rejected: WOMPI_EVENTS_SECRET not configured');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+  }
 
-    // Wompi firma: HMAC-SHA256(secret, timestamp + body_string)
-    const expected = crypto
-      .createHmac('sha256', eventsSecret)
-      .update(`${timestamp}${JSON.stringify(body)}`)
-      .digest('hex');
+  const checksum = req.headers.get('x-event-checksum') ?? '';
+  const timestamp = req.headers.get('x-event-timestamp') ?? '';
 
-    if (expected !== checksum) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-    }
+  if (!checksum || !timestamp) {
+    return NextResponse.json({ error: 'Missing signature headers' }, { status: 401 });
+  }
+
+  // Validar que el timestamp no tenga más de 5 minutos (anti replay-attack)
+  const eventTime = parseInt(timestamp, 10);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (isNaN(eventTime) || Math.abs(nowSeconds - eventTime) > 300) {
+    return NextResponse.json({ error: 'Request expired' }, { status: 401 });
+  }
+
+  // Wompi firma: HMAC-SHA256(secret, timestamp + body_string)
+  const expected = crypto
+    .createHmac('sha256', eventsSecret)
+    .update(`${timestamp}${JSON.stringify(body)}`)
+    .digest('hex');
+
+  const expectedBuf = Buffer.from(expected, 'hex');
+  const checksumBuf = Buffer.from(checksum.length === expected.length ? checksum : '', 'hex');
+  if (checksumBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(expectedBuf, checksumBuf)) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
   const event = body as {
@@ -84,7 +100,10 @@ export async function POST(req: NextRequest) {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
         fetch(`${siteUrl}/api/email`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-internal-secret': process.env.INTERNAL_API_SECRET ?? '',
+          },
           body: JSON.stringify({
             order_number: order.order_number,
             billing_name: order.billing_name,
@@ -104,7 +123,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error('Webhook processing error:', err);
+    console.error('Webhook processing error:', err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
   }
 }

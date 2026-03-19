@@ -9,7 +9,10 @@ export function createClient() {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 }
 
-export const ADMIN_EMAILS = ['fredy.alandete@gmail.com', 'f.alandete@uniandes.edu.co'];
+export const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
+  .split(',')
+  .map((e) => e.trim())
+  .filter(Boolean);
 
 export const isAdmin = (email?: string | null) => ADMIN_EMAILS.includes(email ?? '');
 

@@ -3,6 +3,17 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function escapeHtml(str: unknown): string {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // FROM temporal hasta tener dominio petfyco.com verificado en Resend
 // Cambiar a: 'PetfyCo <pedidos@petfyco.com>' cuando esté el dominio
 const FROM = 'PetfyCo <onboarding@resend.dev>';
@@ -35,8 +46,8 @@ function formatCOP(n: number) {
 function buildOrderConfirmationHtml(order: OrderEmailPayload): string {
   const itemsHtml = order.items.map((item) => `
     <tr>
-      <td style="padding:10px 16px;border-bottom:1px solid #f0f0f0;color:#1A3D1A;font-size:14px;">${item.product_name}</td>
-      <td style="padding:10px 16px;border-bottom:1px solid #f0f0f0;color:#666;font-size:14px;text-align:center;">${item.quantity}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #f0f0f0;color:#1A3D1A;font-size:14px;">${escapeHtml(item.product_name)}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #f0f0f0;color:#666;font-size:14px;text-align:center;">${escapeHtml(item.quantity)}</td>
       <td style="padding:10px 16px;border-bottom:1px solid #f0f0f0;color:#1A3D1A;font-size:14px;text-align:right;font-weight:600;">${formatCOP(item.subtotal)}</td>
     </tr>
   `).join('');
@@ -116,16 +127,16 @@ function buildOrderConfirmationHtml(order: OrderEmailPayload): string {
               <tr>
                 <td>
                   <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1A3D1A;">📍 Dirección de entrega</p>
-                  <p style="margin:0;font-size:14px;color:#444;">${order.delivery_address}</p>
-                  <p style="margin:4px 0 0;font-size:14px;color:#666;">${order.delivery_city}, ${order.delivery_depto}</p>
+                  <p style="margin:0;font-size:14px;color:#444;">${escapeHtml(order.delivery_address)}</p>
+                  <p style="margin:4px 0 0;font-size:14px;color:#666;">${escapeHtml(order.delivery_city)}, ${escapeHtml(order.delivery_depto)}</p>
                 </td>
               </tr>
               <tr><td style="padding-top:16px;">
                 <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1A3D1A;">💳 Método de pago</p>
-                <p style="margin:0;font-size:14px;color:#444;">${paymentLabel[order.payment_method] || order.payment_method}</p>
+                <p style="margin:0;font-size:14px;color:#444;">${escapeHtml(paymentLabel[order.payment_method] || order.payment_method)}</p>
                 ${order.payment_method === 'transferencia' ? `
                 <div style="margin-top:10px;padding:12px;background:#fff3cd;border-radius:8px;border:1px solid #ffc107;">
-                  <p style="margin:0;font-size:13px;color:#856404;">⚠️ Recuerda enviar el comprobante de pago a <strong>pagos@petfyco.com</strong> con tu número de pedido <strong>${order.order_number}</strong></p>
+                  <p style="margin:0;font-size:13px;color:#856404;">⚠️ Recuerda enviar el comprobante de pago a <strong>pagos@petfyco.com</strong> con tu número de pedido <strong>${escapeHtml(order.order_number)}</strong></p>
                 </div>` : ''}
               </td></tr>
             </table>
@@ -160,11 +171,24 @@ function buildOrderConfirmationHtml(order: OrderEmailPayload): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Only internal server-to-server calls are allowed
+  const internalSecret = process.env.INTERNAL_API_SECRET;
+  if (!internalSecret) {
+    return NextResponse.json({ error: 'Not configured' }, { status: 503 });
+  }
+  if (req.headers.get('x-internal-secret') !== internalSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const order: OrderEmailPayload = await req.json();
 
     if (!order.billing_email || !order.order_number) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (!EMAIL_REGEX.test(order.billing_email)) {
+      return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
     }
 
     const { error } = await resend.emails.send({
@@ -178,7 +202,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('Email error:', err);
+    console.error('Email error:', err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
   }
 }

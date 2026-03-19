@@ -152,34 +152,58 @@ CREATE POLICY "Insert order items" ON store_order_items
 CREATE POLICY "Anyone subscribe newsletter" ON store_newsletter
   FOR INSERT WITH CHECK (true);
 
--- Auth (admin) policies — full access for authenticated users
--- In production, restrict these to admin emails via a custom claim or function
-CREATE POLICY "Auth read all orders" ON store_orders
-  FOR SELECT TO authenticated USING (true);
+-- =============================================
+-- Admin helper function
+-- Returns true only for PetfyCo admin emails
+-- =============================================
+CREATE OR REPLACE FUNCTION is_petfyco_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT (auth.jwt() ->> 'email') = ANY(
+    ARRAY['fredy.alandete@gmail.com', 'f.alandete@uniandes.edu.co']
+  );
+$$;
 
-CREATE POLICY "Auth update orders" ON store_orders
-  FOR UPDATE TO authenticated USING (true);
+-- Admin policies — SOLO emails de admin autorizados
+CREATE POLICY "Admin read all orders" ON store_orders
+  FOR SELECT TO authenticated USING (is_petfyco_admin());
 
-CREATE POLICY "Auth read all order items" ON store_order_items
-  FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Admin update orders" ON store_orders
+  FOR UPDATE TO authenticated
+  USING (is_petfyco_admin())
+  WITH CHECK (is_petfyco_admin());
 
-CREATE POLICY "Auth read invoices" ON store_invoices
-  FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Admin read all order items" ON store_order_items
+  FOR SELECT TO authenticated USING (is_petfyco_admin());
 
-CREATE POLICY "Auth insert invoices" ON store_invoices
-  FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Admin read invoices" ON store_invoices
+  FOR SELECT TO authenticated USING (is_petfyco_admin());
 
-CREATE POLICY "Auth update invoices" ON store_invoices
-  FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Admin insert invoices" ON store_invoices
+  FOR INSERT TO authenticated WITH CHECK (is_petfyco_admin());
 
-CREATE POLICY "Auth manage products" ON store_products
-  FOR ALL TO authenticated USING (true);
+CREATE POLICY "Admin update invoices" ON store_invoices
+  FOR UPDATE TO authenticated
+  USING (is_petfyco_admin())
+  WITH CHECK (is_petfyco_admin());
 
-CREATE POLICY "Auth manage categories" ON store_categories
-  FOR ALL TO authenticated USING (true);
+CREATE POLICY "Admin manage products" ON store_products
+  FOR ALL TO authenticated
+  USING (is_petfyco_admin())
+  WITH CHECK (is_petfyco_admin());
 
-CREATE POLICY "Auth manage inventory" ON store_inventory_logs
-  FOR ALL TO authenticated USING (true);
+CREATE POLICY "Admin manage categories" ON store_categories
+  FOR ALL TO authenticated
+  USING (is_petfyco_admin())
+  WITH CHECK (is_petfyco_admin());
+
+CREATE POLICY "Admin manage inventory" ON store_inventory_logs
+  FOR ALL TO authenticated
+  USING (is_petfyco_admin())
+  WITH CHECK (is_petfyco_admin());
 
 -- =============================================
 -- Seed Data — Categories

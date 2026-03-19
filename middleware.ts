@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user || !ADMIN_EMAILS.includes(user.email ?? '')) {
       const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('next', request.nextUrl.pathname);
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
