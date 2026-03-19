@@ -139,7 +139,6 @@ export default function CheckoutPage() {
   const createOrder = async (paymentMethod: string) => {
     if (!billingData || items.length === 0) return;
 
-    // Guard: Wompi requires the public key to be configured
     if (paymentMethod === 'wompi' && !process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY) {
       toast.error('Pago con Wompi no está disponible aún. Usa transferencia bancaria.');
       return;
@@ -147,102 +146,52 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      const orderNumber = 'PFC-' + Date.now().toString().slice(-8);
-      const { data: session } = await supabase.auth.getSession();
-      const userId = session.session?.user?.id;
-
-      const orderPayload = {
-        order_number: orderNumber,
-        user_id: userId || null,
-        status: 'pending' as const,
-        subtotal: cartTotal,
-        discount: 0,
-        shipping,
-        total: orderTotal,
-        billing_name: billingData.billing_name,
-        billing_id_type: billingData.billing_id_type,
-        billing_id: billingData.billing_id,
-        billing_razon_social: billingData.billing_razon_social || null,
-        billing_email: billingData.billing_email,
-        billing_phone: billingData.billing_phone,
-        billing_address: billingData.billing_address,
-        billing_city: billingData.billing_city,
-        billing_depto: billingData.billing_depto,
-        delivery_address: deliverySame ? billingData.billing_address : billingData.delivery_address,
-        delivery_city: deliverySame ? billingData.billing_city : billingData.delivery_city,
-        delivery_depto: deliverySame ? billingData.billing_depto : billingData.delivery_depto,
-        payment_method: paymentMethod,
-        payment_status: 'pending',
-      };
-
-      const { data: order, error: orderError } = await supabase
-        .from('store_orders')
-        .insert(orderPayload)
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.product.id,
-        product_name: item.product.name,
-        product_sku: item.product.sku || null,
-        unit_price: item.product.price,
-        quantity: item.quantity,
-        subtotal: item.product.price * item.quantity,
-      }));
-
-      const { error: itemsError } = await supabase.from('store_order_items').insert(orderItems);
-      if (itemsError) throw itemsError;
-
-      if (paymentMethod === 'wompi') {
-        // Para Wompi: limpiar carrito y redirigir al checkout de Wompi.
-        // El email de confirmación se enviará desde el webhook cuando el pago sea APPROVED.
-        clearCart();
-        const wompiKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY!;
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
-        const params = new URLSearchParams({
-          'public-key': wompiKey,
-          'currency': 'COP',
-          'amount-in-cents': String(orderTotal * 100),
-          'reference': orderNumber,
-          'redirect-url': `${siteUrl}/pago/resultado`,
-        });
-        window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
-        return;
-      }
-
-      // Transferencia bancaria: enviar email de confirmación y redirigir a pedidos
-      fetch('/api/email', {
+      // Enviar solo product_id + quantity — el servidor valida precios desde la BD
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          order_number: order.order_number,
-          billing_name: billingData.billing_name,
-          billing_email: billingData.billing_email,
-          delivery_address: deliverySame ? billingData.billing_address : billingData.delivery_address,
-          delivery_city: deliverySame ? billingData.billing_city : billingData.delivery_city,
-          delivery_depto: deliverySame ? billingData.billing_depto : billingData.delivery_depto,
-          items: orderItems.map((i) => ({
-            product_name: i.product_name,
-            quantity: i.quantity,
-            unit_price: i.unit_price,
-            subtotal: i.subtotal,
-          })),
-          subtotal: cartTotal,
-          shipping,
-          total: orderTotal,
+          items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
+          billing: {
+            billing_name:         billingData.billing_name,
+            billing_id_type:      billingData.billing_id_type,
+            billing_id:           billingData.billing_id,
+            billing_razon_social: billingData.billing_razon_social,
+            billing_email:        billingData.billing_email,
+            billing_phone:        billingData.billing_phone,
+            billing_address:      billingData.billing_address,
+            billing_city:         billingData.billing_city,
+            billing_depto:        billingData.billing_depto,
+          },
           payment_method: paymentMethod,
+          delivery_same:    deliverySame,
+          delivery_address: billingData.delivery_address,
+          delivery_city:    billingData.delivery_city,
+          delivery_depto:   billingData.delivery_depto,
         }),
-      }).catch(() => {});
+      });
 
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? 'Error al crear el pedido');
+      }
+
+      const data = await res.json() as { order_number: string; wompi_url?: string };
+
+      if (paymentMethod === 'wompi') {
+        clearCart();
+        // URL construida y firmada por el servidor con el monto validado
+        window.location.href = data.wompi_url!;
+        return;
+      }
+
+      // Transferencia: email ya fue enviado server-side en /api/orders
       clearCart();
       toast.success('¡Pedido creado exitosamente!');
-      router.push(`/pedidos?order=${order.order_number}`);
+      router.push(`/pedidos?order=${data.order_number}`);
     } catch (err) {
-      console.error(err);
-      toast.error('Error al crear el pedido. Intenta de nuevo.');
+      console.error('Checkout error:', err instanceof Error ? err.message : String(err));
+      toast.error(err instanceof Error ? err.message : 'Error al crear el pedido. Intenta de nuevo.');
     } finally {
       setSubmitting(false);
     }

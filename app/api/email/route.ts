@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -171,6 +172,15 @@ function buildOrderConfirmationHtml(order: OrderEmailPayload): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 emails por IP por minuto (defensa en profundidad)
+  const rl = rateLimit(`email:${getIp(req)}`, 10, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.resetInMs / 1000)) } }
+    );
+  }
+
   // Only internal server-to-server calls are allowed
   const internalSecret = process.env.INTERNAL_API_SECRET;
   if (!internalSecret) {

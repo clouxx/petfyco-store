@@ -1,0 +1,237 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase';
+import { rateLimit, getIp } from '@/lib/rate-limit';
+
+// Lógica de cobertura replicada server-side (fuente de verdad)
+const FREE_SHIPPING = 150_000;
+const SHIPPING_BY_ZONE: Record<string, number> = {
+  sabaneta:    5_000,
+  medellin:    8_000,
+  metro_close: 8_000,
+  metro_far:   10_000,
+  outside:     12_000,
+  unknown:     8_000,
+};
+
+const SABANETA    = ['sabaneta'];
+const MEDELLIN    = ['medellín', 'medellin'];
+const METRO_CLOSE = ['itagüí', 'itagui', 'envigado', 'la estrella'];
+const METRO_FAR   = ['bello', 'copacabana'];
+
+function getCoverageStatus(city: string, depto: string): string {
+  if (!city || !depto) return 'unknown';
+  if (depto !== 'Antioquia') return 'outside';
+  const n = city.toLowerCase().trim();
+  if (SABANETA.includes(n))    return 'sabaneta';
+  if (MEDELLIN.includes(n))    return 'medellin';
+  if (METRO_CLOSE.includes(n)) return 'metro_close';
+  if (METRO_FAR.includes(n))   return 'metro_far';
+  return 'outside';
+}
+
+export async function POST(req: NextRequest) {
+  // Rate limit: 5 órdenes por IP por minuto
+  const ip = getIp(req);
+  const rl = rateLimit(`orders:${ip}`, 5, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Intenta en unos segundos.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.resetInMs / 1000)) } }
+    );
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const {
+    items,
+    billing,
+    payment_method,
+    delivery_same,
+    delivery_address,
+    delivery_city,
+    delivery_depto,
+  } = body as {
+    items: { product_id: string; quantity: number }[];
+    billing: {
+      billing_name: string;
+      billing_id_type: string;
+      billing_id: string;
+      billing_razon_social?: string;
+      billing_email: string;
+      billing_phone: string;
+      billing_address: string;
+      billing_city: string;
+      billing_depto: string;
+    };
+    payment_method: string;
+    delivery_same: boolean;
+    delivery_address?: string;
+    delivery_city?: string;
+    delivery_depto?: string;
+  };
+
+  // Validar estructura básica
+  if (!Array.isArray(items) || items.length === 0) {
+    return NextResponse.json({ error: 'No items' }, { status: 400 });
+  }
+  if (!billing?.billing_email || !billing?.billing_name) {
+    return NextResponse.json({ error: 'Missing billing data' }, { status: 400 });
+  }
+  if (!['wompi', 'transferencia'].includes(payment_method)) {
+    return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 });
+  }
+
+  // Validar cantidades
+  for (const item of items) {
+    if (!item.product_id || typeof item.quantity !== 'number' || item.quantity < 1 || !Number.isInteger(item.quantity)) {
+      return NextResponse.json({ error: 'Invalid item' }, { status: 400 });
+    }
+  }
+
+  const supabase = createClient();
+
+  // Obtener precios reales desde la BD — nunca confiar en el cliente
+  const productIds = items.map((i) => i.product_id);
+  const { data: products, error: productsError } = await supabase
+    .from('store_products')
+    .select('id, name, sku, price, active, stock')
+    .in('id', productIds)
+    .eq('active', true);
+
+  if (productsError || !products) {
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+  }
+
+  // Verificar que todos los productos existen y están activos
+  const productMap = new Map(products.map((p) => [p.id, p]));
+  for (const item of items) {
+    if (!productMap.has(item.product_id)) {
+      return NextResponse.json({ error: `Product not available: ${item.product_id}` }, { status: 400 });
+    }
+  }
+
+  // Calcular subtotal con precios reales de la BD
+  let subtotal = 0;
+  const orderItems = items.map((item) => {
+    const product = productMap.get(item.product_id)!;
+    const lineSubtotal = product.price * item.quantity;
+    subtotal += lineSubtotal;
+    return {
+      product_id: item.product_id,
+      product_name: product.name,
+      product_sku: product.sku || null,
+      unit_price: product.price,
+      quantity: item.quantity,
+      subtotal: lineSubtotal,
+    };
+  });
+
+  // Calcular envío server-side
+  const deliveryCity  = delivery_same ? billing.billing_city  : (delivery_city  ?? '');
+  const deliveryDepto = delivery_same ? billing.billing_depto : (delivery_depto ?? '');
+  const zone    = getCoverageStatus(deliveryCity, deliveryDepto);
+  const shipping = subtotal >= FREE_SHIPPING ? 0 : (SHIPPING_BY_ZONE[zone] ?? 8_000);
+  const total    = subtotal + shipping;
+
+  // Crear orden
+  const orderNumber = 'PFC-' + Date.now().toString().slice(-8);
+
+  const { data: order, error: orderError } = await supabase
+    .from('store_orders')
+    .insert({
+      order_number:       orderNumber,
+      status:             'pending',
+      subtotal,
+      discount:           0,
+      shipping,
+      total,
+      billing_name:       billing.billing_name,
+      billing_id_type:    billing.billing_id_type,
+      billing_id:         billing.billing_id,
+      billing_razon_social: billing.billing_razon_social || null,
+      billing_email:      billing.billing_email,
+      billing_phone:      billing.billing_phone,
+      billing_address:    billing.billing_address,
+      billing_city:       billing.billing_city,
+      billing_depto:      billing.billing_depto,
+      delivery_address:   delivery_same ? billing.billing_address : (delivery_address ?? billing.billing_address),
+      delivery_city:      deliveryCity,
+      delivery_depto:     deliveryDepto,
+      payment_method,
+      payment_status:     'pending',
+    })
+    .select()
+    .single();
+
+  if (orderError || !order) {
+    console.error('Order creation error:', orderError?.message);
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+  }
+
+  // Insertar items con order_id real
+  const { error: itemsError } = await supabase
+    .from('store_order_items')
+    .insert(orderItems.map((i) => ({ ...i, order_id: order.id })));
+
+  if (itemsError) {
+    console.error('Order items error:', itemsError.message);
+    return NextResponse.json({ error: 'Failed to create order items' }, { status: 500 });
+  }
+
+  // Para transferencia: enviar email de confirmación server-side (tiene acceso al secret)
+  if (payment_method === 'transferencia') {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
+    fetch(`${siteUrl}/api/email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-secret': process.env.INTERNAL_API_SECRET ?? '',
+      },
+      body: JSON.stringify({
+        order_number:    order.order_number,
+        billing_name:    billing.billing_name,
+        billing_email:   billing.billing_email,
+        delivery_address: delivery_same ? billing.billing_address : (delivery_address ?? billing.billing_address),
+        delivery_city:   deliveryCity,
+        delivery_depto:  deliveryDepto,
+        items:           orderItems.map((i) => ({
+          product_name: i.product_name,
+          quantity:     i.quantity,
+          unit_price:   i.unit_price,
+          subtotal:     i.subtotal,
+        })),
+        subtotal,
+        shipping,
+        total,
+        payment_method,
+      }),
+    }).catch(() => {});
+  }
+
+  // Para Wompi: construir URL de pago server-side con monto validado
+  if (payment_method === 'wompi') {
+    const wompiKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY;
+    if (!wompiKey) {
+      return NextResponse.json({ error: 'Wompi no está disponible' }, { status: 503 });
+    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
+    const params = new URLSearchParams({
+      'public-key': wompiKey,
+      currency: 'COP',
+      'amount-in-cents': String(total * 100),
+      reference: orderNumber,
+      'redirect-url': `${siteUrl}/pago/resultado`,
+    });
+    return NextResponse.json({
+      order_number: orderNumber,
+      wompi_url: `https://checkout.wompi.co/p/?${params.toString()}`,
+    });
+  }
+
+  return NextResponse.json({ order_number: orderNumber });
+}

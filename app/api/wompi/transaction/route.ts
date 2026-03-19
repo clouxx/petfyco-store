@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 const WOMPI_SANDBOX_URL = 'https://sandbox.wompi.co/v1';
 const WOMPI_PROD_URL = 'https://production.wompi.co/v1';
 
 export async function GET(req: NextRequest) {
+  // Rate limit: 20 consultas por IP por minuto
+  const rl = rateLimit(`transaction:${getIp(req)}`, 20, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.resetInMs / 1000)) } }
+    );
+  }
+
   const id = req.nextUrl.searchParams.get('id');
   if (!id) {
     return NextResponse.json({ error: 'Missing transaction id' }, { status: 400 });
