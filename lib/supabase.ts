@@ -21,12 +21,17 @@ export function createAdminClient() {
   });
 }
 
-export const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
+// NOTA DE SEGURIDAD: NEXT_PUBLIC_ADMIN_EMAILS es solo un hint de UI (navbar,
+// redirección post-login). NO es el gate de seguridad real — ese está en
+// middleware.ts con la variable server-only ADMIN_EMAILS.
+// Si prefieres no exponer emails en el bundle, deja NEXT_PUBLIC_ADMIN_EMAILS
+// vacío y los admins accederán a /admin navegando directamente.
+const _UI_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
   .split(',')
   .map((e) => e.trim())
   .filter(Boolean);
 
-export const isAdmin = (email?: string | null) => ADMIN_EMAILS.includes(email ?? '');
+export const isAdmin = (email?: string | null) => _UI_ADMIN_EMAILS.includes(email ?? '');
 
 export const formatCOP = (amount: number) =>
   new Intl.NumberFormat('es-CO', {

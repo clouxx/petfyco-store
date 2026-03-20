@@ -1,7 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
+// SEGURIDAD: leer desde variable server-only (sin NEXT_PUBLIC_) para que los
+// emails de admin NO se incluyan en el bundle JavaScript del cliente.
+// Configura ADMIN_EMAILS en Vercel → Settings → Environment Variables (server).
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '')
   .split(',')
   .map((e) => e.trim())
   .filter(Boolean);

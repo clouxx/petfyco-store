@@ -67,6 +67,31 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<Step>(1);
   const [billingData, setBillingData] = useState<BillingData | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [stockErrors, setStockErrors] = useState<string[]>([]);
+
+  // Revalidar stock del carrito contra la BD al montar el checkout
+  useEffect(() => {
+    if (items.length === 0) return;
+    const ids = items.map((i) => i.product.id);
+    supabase
+      .from('store_products')
+      .select('id, stock, name')
+      .in('id', ids)
+      .then(({ data }) => {
+        if (!data) return;
+        const errors: string[] = [];
+        for (const item of items) {
+          const fresh = data.find((p) => p.id === item.product.id);
+          if (!fresh) continue;
+          if (fresh.stock < item.quantity) {
+            errors.push(
+              `"${item.product.name}": solicitaste ${item.quantity} pero solo hay ${fresh.stock} disponibles.`
+            );
+          }
+        }
+        setStockErrors(errors);
+      });
+  }, [items]);
 
   const cartTotal = total();
   const isFreeShipping = cartTotal >= FREE_SHIPPING_THRESHOLD;
@@ -221,6 +246,15 @@ export default function CheckoutPage() {
           {step === 1 && (
             <form onSubmit={handleSubmit(onBillingSubmit)} className="bg-white rounded-2xl shadow-card p-8 space-y-5">
               <h2 className="text-xl font-bold text-navy">Datos de Facturación</h2>
+
+              {/* Advertencias de stock desactualizado */}
+              {stockErrors.length > 0 && (
+                <div className="bg-red-50 border border-red-300 rounded-xl p-4 text-sm text-red-700 space-y-1">
+                  <p className="font-semibold">⚠️ Stock insuficiente para algunos productos:</p>
+                  {stockErrors.map((err, i) => <p key={i}>{err}</p>)}
+                  <p className="mt-2 text-xs">Actualiza las cantidades en el carrito antes de continuar.</p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -518,10 +552,10 @@ export default function CheckoutPage() {
                 <div className="border-2 border-gray-200 rounded-2xl p-6">
                   <h3 className="font-bold text-navy mb-3">Transferencia bancaria</h3>
                   <div className="bg-petfy-grey rounded-xl p-4 text-sm space-y-1.5 mb-4">
-                    <p><span className="font-semibold">Banco:</span> Bancolombia</p>
-                    <p><span className="font-semibold">Cuenta ahorros:</span> 123-456789-00</p>
-                    <p><span className="font-semibold">NIT:</span> 901234567-8</p>
-                    <p><span className="font-semibold">Titular:</span> PetfyCo S.A.S.</p>
+                    <p><span className="font-semibold">Banco:</span> {process.env.NEXT_PUBLIC_BANK_NAME ?? 'Bancolombia'}</p>
+                    <p><span className="font-semibold">Cuenta ahorros:</span> {process.env.NEXT_PUBLIC_BANK_ACCOUNT ?? '—'}</p>
+                    <p><span className="font-semibold">NIT:</span> {process.env.NEXT_PUBLIC_BANK_NIT ?? '—'}</p>
+                    <p><span className="font-semibold">Titular:</span> {process.env.NEXT_PUBLIC_BANK_HOLDER ?? 'PetfyCo S.A.S.'}</p>
                     <p className="text-petfy-grey-text text-xs mt-2">
                       Envía el comprobante a pagos@petfyco.com con tu número de pedido
                     </p>

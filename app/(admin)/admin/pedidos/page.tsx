@@ -38,10 +38,18 @@ export default function PedidosAdminPage() {
     let query = supabase
       .from('store_orders')
       .select('*, items:store_order_items(*)')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(200); // previene OOM con catálogos grandes
 
     if (statusFilter) query = query.eq('status', statusFilter);
-    if (search) query = query.or(`order_number.ilike.%${search}%,billing_name.ilike.%${search}%,billing_email.ilike.%${search}%`);
+    if (search) {
+      // Escapar % y _ para evitar que el input del usuario sea tratado como
+      // comodines de LIKE (ReDoS / resultados inesperados)
+      const safe = search.replace(/[%_\\]/g, '\\$&');
+      query = query.or(
+        `order_number.ilike.%${safe}%,billing_name.ilike.%${safe}%,billing_email.ilike.%${safe}%`
+      );
+    }
     if (dateFrom) query = query.gte('created_at', dateFrom);
     if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59');
 

@@ -36,7 +36,7 @@ export default function RegistroPage() {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -44,6 +44,16 @@ export default function RegistroPage() {
         },
       });
       if (error) throw error;
+
+      // Insertar perfil en tabla profiles para que checkout pueda pre-llenarse
+      if (authData.user) {
+        await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          display_name: data.nombre,
+          email: data.email,
+        });
+      }
+
       toast.success('¡Cuenta creada! Revisa tu correo para confirmar.');
       router.push('/auth/login?message=confirm');
     } catch (err: unknown) {

@@ -5,9 +5,14 @@ import crypto from 'crypto';
 // Wompi envía eventos POST con el cuerpo del evento y una firma en el header
 // Docs: https://docs.wompi.co/docs/colombia/eventos/
 export async function POST(req: NextRequest) {
+  // Leer el raw body PRIMERO — necesario para calcular el HMAC sobre el payload
+  // exacto que envió Wompi (re-serializar con JSON.stringify puede cambiar el orden
+  // de claves o espacios, produciendo una firma diferente y rechazando pagos legítimos).
+  let rawBody: string;
   let body: Record<string, unknown>;
   try {
-    body = await req.json();
+    rawBody = await req.text();
+    body = JSON.parse(rawBody) as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
@@ -33,10 +38,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Request expired' }, { status: 401 });
   }
 
-  // Wompi firma: HMAC-SHA256(secret, timestamp + body_string)
+  // Wompi firma: HMAC-SHA256(secret, timestamp + raw_body_string)
+  // Usar rawBody (el texto original), no JSON.stringify(body), para que la firma
+  // coincida exactamente con lo que Wompi calculó en su lado.
   const expected = crypto
     .createHmac('sha256', eventsSecret)
-    .update(`${timestamp}${JSON.stringify(body)}`)
+    .update(`${timestamp}${rawBody}`)
     .digest('hex');
 
   const expectedBuf = Buffer.from(expected, 'hex');
