@@ -3,35 +3,9 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase';
 import { rateLimit, getIp } from '@/lib/rate-limit';
+import { getCoverageStatus, calcShipping, FREE_SHIPPING_THRESHOLD } from '@/lib/coverage';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Lógica de cobertura replicada server-side (fuente de verdad)
-const FREE_SHIPPING = 150_000;
-const SHIPPING_BY_ZONE: Record<string, number> = {
-  sabaneta:    5_000,
-  medellin:    8_000,
-  metro_close: 8_000,
-  metro_far:   10_000,
-  outside:     12_000,
-  unknown:     8_000,
-};
-
-const SABANETA    = ['sabaneta'];
-const MEDELLIN    = ['medellín', 'medellin'];
-const METRO_CLOSE = ['itagüí', 'itagui', 'envigado', 'la estrella'];
-const METRO_FAR   = ['bello', 'copacabana'];
-
-function getCoverageStatus(city: string, depto: string): string {
-  if (!city || !depto) return 'unknown';
-  if (depto !== 'Antioquia') return 'outside';
-  const n = city.toLowerCase().trim();
-  if (SABANETA.includes(n))    return 'sabaneta';
-  if (MEDELLIN.includes(n))    return 'medellin';
-  if (METRO_CLOSE.includes(n)) return 'metro_close';
-  if (METRO_FAR.includes(n))   return 'metro_far';
-  return 'outside';
-}
 
 export async function POST(req: NextRequest) {
   // Rate limit: 5 órdenes por minuto — por user_id si autenticado, por IP si no
@@ -167,8 +141,7 @@ export async function POST(req: NextRequest) {
   // Calcular envío server-side
   const deliveryCity  = delivery_same ? billing.billing_city  : (delivery_city  ?? '');
   const deliveryDepto = delivery_same ? billing.billing_depto : (delivery_depto ?? '');
-  const zone    = getCoverageStatus(deliveryCity, deliveryDepto);
-  const shipping = subtotal >= FREE_SHIPPING ? 0 : (SHIPPING_BY_ZONE[zone] ?? 8_000);
+  const shipping = calcShipping(subtotal, deliveryCity, deliveryDepto);
   const total    = subtotal + shipping;
 
   // Crear orden

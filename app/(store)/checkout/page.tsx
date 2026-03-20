@@ -11,26 +11,9 @@ import { z } from 'zod';
 import { Check, ChevronRight, Truck, CreditCard, MapPin, AlertTriangle, XCircle } from 'lucide-react';
 import { supabase, formatCOP } from '@/lib/supabase';
 import { useCartStore } from '@/lib/cart-store';
+import { getCoverageStatus, calcShipping, FREE_SHIPPING_THRESHOLD, SHIPPING_BY_ZONE, type CoverageStatus } from '@/lib/coverage';
 import toast from 'react-hot-toast';
 
-// Municipios dentro de la zona de cobertura (negocio con base en Sabaneta)
-const SABANETA = ['sabaneta'];
-const MEDELLIN = ['medellín', 'medellin'];
-const METRO_CLOSE = ['itagüí', 'itagui', 'envigado', 'la estrella'];
-const METRO_FAR = ['bello', 'copacabana'];
-
-type CoverageStatus = 'sabaneta' | 'medellin' | 'metro_close' | 'metro_far' | 'outside' | 'unknown';
-
-function getCoverageStatus(city: string, depto: string): CoverageStatus {
-  if (!city || !depto) return 'unknown';
-  if (depto !== 'Antioquia') return 'outside';
-  const normalized = city.toLowerCase().trim();
-  if (SABANETA.includes(normalized)) return 'sabaneta';
-  if (MEDELLIN.includes(normalized)) return 'medellin';
-  if (METRO_CLOSE.includes(normalized)) return 'metro_close';
-  if (METRO_FAR.includes(normalized)) return 'metro_far';
-  return 'outside';
-}
 
 const COVERAGE_LABELS: Record<CoverageStatus, { text: string; sub: string; color: string; Icon: React.ElementType }> = {
   sabaneta:    { text: '¡Zona de cobertura!', sub: 'Sabaneta — entrega el mismo día o siguiente día hábil', color: 'bg-green-50 border-green-300 text-green-700', Icon: Check },
@@ -77,15 +60,6 @@ type BillingData = z.infer<typeof billingSchema>;
 
 type Step = 1 | 2 | 3;
 
-const FREE_SHIPPING = 150000;
-const SHIPPING_BY_ZONE: Record<CoverageStatus, number> = {
-  sabaneta:    5000,
-  medellin:    8000,
-  metro_close: 8000,
-  metro_far:   10000,
-  outside:     12000,
-  unknown:     8000,
-};
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -95,7 +69,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const cartTotal = total();
-  const isFreeShipping = cartTotal >= FREE_SHIPPING;
+  const isFreeShipping = cartTotal >= FREE_SHIPPING_THRESHOLD;
 
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<BillingData>({
     resolver: zodResolver(billingSchema),
