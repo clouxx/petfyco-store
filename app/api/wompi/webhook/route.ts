@@ -81,12 +81,21 @@ export async function POST(req: NextRequest) {
     // B2 — idempotency: no reprocessar si ya fue aprobado
     const { data: existing } = await supabase
       .from('store_orders')
-      .select('payment_status')
+      .select('payment_status, total')
       .eq('order_number', reference)
       .maybeSingle();
 
     if (existing?.payment_status === 'approved') {
       return NextResponse.json({ received: true });
+    }
+
+    // Validar que el monto de Wompi coincide con el total en BD (anti-tampering)
+    if (status === 'APPROVED' && tx.amount_in_cents !== undefined && existing?.total !== undefined) {
+      const expectedCents = Math.round(existing.total * 100);
+      if (tx.amount_in_cents !== expectedCents) {
+        console.error(`Webhook monto inválido: Wompi=${tx.amount_in_cents} cents, BD=${expectedCents} cents (ref: ${reference})`);
+        return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
+      }
     }
 
     await supabase

@@ -55,7 +55,7 @@ const billingSchema = z.object({
   billing_name: z.string().min(2, 'Nombre requerido'),
   billing_razon_social: z.string().optional(),
   billing_email: z.string().email('Correo inválido'),
-  billing_phone: z.string().min(7, 'Teléfono requerido'),
+  billing_phone: z.string().regex(/^\d{10}$/, 'Teléfono debe tener 10 dígitos'),
   billing_address: z.string().min(5, 'Dirección requerida'),
   billing_city: z.string().min(2, 'Ciudad requerida'),
   billing_depto: z.string().min(2, 'Departamento requerido'),
@@ -65,6 +65,12 @@ const billingSchema = z.object({
   delivery_depto: z.string().optional(),
   legal_accepted: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar los Términos y Condiciones para continuar' }) }),
   privacy_accepted: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar la Política de Privacidad para continuar' }) }),
+}).superRefine((data, ctx) => {
+  if (!data.delivery_same) {
+    if (!data.delivery_address?.trim()) ctx.addIssue({ path: ['delivery_address'], code: z.ZodIssueCode.custom, message: 'Dirección de entrega requerida' });
+    if (!data.delivery_city?.trim())    ctx.addIssue({ path: ['delivery_city'],    code: z.ZodIssueCode.custom, message: 'Ciudad de entrega requerida' });
+    if (!data.delivery_depto?.trim())   ctx.addIssue({ path: ['delivery_depto'],   code: z.ZodIssueCode.custom, message: 'Departamento de entrega requerido' });
+  }
 });
 
 type BillingData = z.infer<typeof billingSchema>;

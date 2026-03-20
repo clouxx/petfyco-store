@@ -34,9 +34,17 @@ function getCoverageStatus(city: string, depto: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  // Rate limit: 5 órdenes por IP por minuto
+  // Rate limit: 5 órdenes por minuto — por user_id si autenticado, por IP si no
   const ip = getIp(req);
-  const rl = rateLimit(`orders:${ip}`, 5, 60_000);
+  const cookieStoreRL = await cookies();
+  const supabaseRL = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStoreRL.getAll(), setAll: () => {} } }
+  );
+  const { data: { session: sessionRL } } = await supabaseRL.auth.getSession();
+  const rlKey = sessionRL?.user?.id ? `orders:user:${sessionRL.user.id}` : `orders:ip:${ip}`;
+  const rl = rateLimit(rlKey, 5, 60_000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: 'Too many requests. Intenta en unos segundos.' },
@@ -125,11 +133,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 
-  // Verificar que todos los productos existen y están activos
+  // Verificar que todos los productos existen, están activos y tienen stock suficiente
   const productMap = new Map(products.map((p) => [p.id, p]));
   for (const item of items) {
-    if (!productMap.has(item.product_id)) {
+    const product = productMap.get(item.product_id);
+    if (!product) {
       return NextResponse.json({ error: `Product not available: ${item.product_id}` }, { status: 400 });
+    }
+    if (item.quantity > product.stock) {
+      return NextResponse.json(
+        { error: `Stock insuficiente para "${product.name}". Disponible: ${product.stock}` },
+        { status: 400 }
+      );
     }
   }
 

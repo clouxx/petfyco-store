@@ -62,11 +62,9 @@ export default function AdminDashboard() {
       setPendingCount(pendingOrders.count || 0);
       setActiveProducts(products.count || 0);
       setRecentOrders(recentOrd.data || []);
-      setLowStockProducts(lowStock.data || []);
-
-      // Low stock count (stock = 0)
-      const { count } = await supabase.from('store_products').select('id', { count: 'exact' }).eq('active', true).lt('stock', 5);
-      setLowStockCount(count || 0);
+      const lowStockData = lowStock.data || [];
+      setLowStockProducts(lowStockData);
+      setLowStockCount(lowStockData.filter((p: { stock: number }) => p.stock < 5).length);
 
       // Sales chart: last 30 days
       const { data: chartOrders } = await supabase
