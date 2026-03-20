@@ -16,11 +16,16 @@ interface WindowEntry {
 
 const store = new Map<string, WindowEntry>();
 
+// Límite máximo de claves únicas para prevenir DoS por memory bloat
+const MAX_STORE_SIZE = 10_000;
+
 // Limpieza periódica para no acumular entradas en memoria
 let lastCleanup = Date.now();
 function maybeCleanup(windowMs: number) {
   const now = Date.now();
-  if (now - lastCleanup < 60_000) return;
+  // Limpieza forzada si se supera el límite máximo
+  const forceCleanup = store.size >= MAX_STORE_SIZE;
+  if (!forceCleanup && now - lastCleanup < 60_000) return;
   lastCleanup = now;
   for (const [key, entry] of store.entries()) {
     const cutoff = now - windowMs;

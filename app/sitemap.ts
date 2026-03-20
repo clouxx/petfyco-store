@@ -1,6 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase';
 
+// Regenerar el sitemap como máximo una vez por hora (no en cada request)
+export const revalidate = 3600;
+
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://petfyco-store.vercel.app';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
