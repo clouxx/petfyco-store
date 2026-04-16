@@ -71,12 +71,20 @@ function NuevoProductoForm() {
       };
 
       if (editId) {
-        const { error } = await supabase.from('store_products').update(payload).eq('id', editId);
-        if (error) throw error;
+        const res = await fetch('/api/admin/products', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editId, ...payload }),
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
         toast.success('Producto actualizado exitosamente');
       } else {
-        const { error } = await supabase.from('store_products').insert({ ...payload, created_at: new Date().toISOString() });
-        if (error) throw error;
+        const res = await fetch('/api/admin/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
         toast.success('Producto creado exitosamente');
       }
       router.push('/admin/catalogo');

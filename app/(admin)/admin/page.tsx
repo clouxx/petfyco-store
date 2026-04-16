@@ -1,22 +1,14 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   DollarSign, ShoppingBag, Package, AlertTriangle,
   Plus, Eye, FileText,
 } from 'lucide-react';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
-import { supabase, formatCOP } from '@/lib/supabase';
+import { createAdminClient, formatCOP } from '@/lib/supabase';
 import KPICard from '@/components/admin/KPICard';
+import SalesChart from '@/components/admin/SalesChart';
 import type { Order, Product } from '@/lib/types';
 
-interface DailySales {
-  date: string;
-  total: number;
-}
+interface DailySales { date: string; total: number }
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -30,81 +22,46 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: 'Entregado', cancelled: 'Cancelado',
 };
 
-export default function AdminDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [todayTotal, setTodayTotal] = useState(0);
-  const [monthTotal, setMonthTotal] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [activeProducts, setActiveProducts] = useState(0);
-  const [lowStockCount, setLowStockCount] = useState(0);
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-  const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
-  const [salesData, setSalesData] = useState<DailySales[]>([]);
+export const revalidate = 60; // revalida cada 60s
 
-  useEffect(() => {
-    const load = async () => {
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+export default async function AdminDashboard() {
+  const supabase = createAdminClient();
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [ordersToday, ordersMonth, pendingOrders, products, recentOrd, lowStock] = await Promise.all([
-        supabase.from('store_orders').select('total').gte('created_at', todayStart).neq('status', 'cancelled'),
-        supabase.from('store_orders').select('total').gte('created_at', monthStart).neq('status', 'cancelled'),
-        supabase.from('store_orders').select('id', { count: 'exact' }).eq('status', 'pending'),
-        supabase.from('store_products').select('id', { count: 'exact' }).eq('active', true),
-        supabase.from('store_orders').select('*').order('created_at', { ascending: false }).limit(10),
-        supabase.from('store_products').select('*').eq('active', true).lte('stock', 5).order('stock', { ascending: true }).limit(10),
-      ]);
+  const [ordersToday, ordersMonth, pendingOrders, products, recentOrd, lowStock, chartOrders] = await Promise.all([
+    supabase.from('store_orders').select('total').gte('created_at', todayStart).neq('status', 'cancelled'),
+    supabase.from('store_orders').select('total').gte('created_at', monthStart).neq('status', 'cancelled'),
+    supabase.from('store_orders').select('id', { count: 'exact' }).eq('status', 'pending'),
+    supabase.from('store_products').select('id', { count: 'exact' }).eq('active', true),
+    supabase.from('store_orders').select('*').order('created_at', { ascending: false }).limit(10),
+    supabase.from('store_products').select('*').eq('active', true).lte('stock', 5).order('stock', { ascending: true }).limit(10),
+    supabase.from('store_orders').select('created_at, total').gte('created_at', thirtyDaysAgo).neq('status', 'cancelled').order('created_at'),
+  ]);
 
-      setTodayTotal((ordersToday.data || []).reduce((s: number, o: { total: number }) => s + (o.total || 0), 0));
-      setMonthTotal((ordersMonth.data || []).reduce((s: number, o: { total: number }) => s + (o.total || 0), 0));
-      setPendingCount(pendingOrders.count || 0);
-      setActiveProducts(products.count || 0);
-      setRecentOrders(recentOrd.data || []);
-      const lowStockData = lowStock.data || [];
-      setLowStockProducts(lowStockData);
-      setLowStockCount(lowStockData.filter((p: { stock: number }) => p.stock < 5).length);
+  const todayTotal = (ordersToday.data || []).reduce((s: number, o: { total: number }) => s + (o.total || 0), 0);
+  const monthTotal = (ordersMonth.data || []).reduce((s: number, o: { total: number }) => s + (o.total || 0), 0);
+  const pendingCount = pendingOrders.count || 0;
+  const activeProducts = products.count || 0;
+  const recentOrders = (recentOrd.data || []) as Order[];
+  const lowStockData = (lowStock.data || []) as Product[];
+  const lowStockCount = lowStockData.filter((p) => p.stock < 5).length;
 
-      // Sales chart: last 30 days
-      const { data: chartOrders } = await supabase
-        .from('store_orders')
-        .select('created_at, total')
-        .gte('created_at', thirtyDaysAgo)
-        .neq('status', 'cancelled')
-        .order('created_at');
-
-      const dailyMap: Record<string, number> = {};
-      (chartOrders || []).forEach((o: { created_at: string; total: number }) => {
-        const d = o.created_at.slice(0, 10);
-        dailyMap[d] = (dailyMap[d] || 0) + (o.total || 0);
-      });
-      const days: DailySales[] = [];
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date(Date.now() - i * 86400000);
-        const key = d.toISOString().slice(0, 10);
-        days.push({
-          date: d.toLocaleDateString('es-CO', { month: 'short', day: 'numeric' }),
-          total: dailyMap[key] || 0,
-        });
-      }
-      setSalesData(days);
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="p-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-8">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl h-28 animate-pulse" />
-          ))}
-        </div>
-        <div className="bg-white rounded-2xl h-72 animate-pulse" />
-      </div>
-    );
+  const dailyMap: Record<string, number> = {};
+  (chartOrders.data || []).forEach((o: { created_at: string; total: number }) => {
+    const d = o.created_at.slice(0, 10);
+    dailyMap[d] = (dailyMap[d] || 0) + (o.total || 0);
+  });
+  const salesData: DailySales[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000);
+    const key = d.toISOString().slice(0, 10);
+    salesData.push({
+      date: d.toLocaleDateString('es-CO', { month: 'short', day: 'numeric' }),
+      total: dailyMap[key] || 0,
+    });
   }
 
   return (
@@ -112,7 +69,7 @@ export default function AdminDashboard() {
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold text-navy">Dashboard</h1>
         <p className="text-petfy-grey-text text-sm mt-1">
-          {new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          {now.toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </div>
 
@@ -128,29 +85,7 @@ export default function AdminDashboard() {
       {/* Sales Chart */}
       <div className="bg-white rounded-2xl shadow-card p-6 mb-8">
         <h2 className="font-bold text-navy text-lg mb-5">Ventas — Últimos 30 días</h2>
-        <ResponsiveContainer width="100%" height={260}>
-          <AreaChart data={salesData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-            <defs>
-              <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4CB5F9" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#4CB5F9" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F6F9" />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#757575' }} tickLine={false} axisLine={false} interval={4} />
-            <YAxis
-              tick={{ fontSize: 11, fill: '#757575' }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-            />
-            <Tooltip
-              formatter={(v: number) => [formatCOP(v), 'Ventas']}
-              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: '12px' }}
-            />
-            <Area type="monotone" dataKey="total" stroke="#4CB5F9" strokeWidth={2.5} fill="url(#salesGradient)" />
-          </AreaChart>
-        </ResponsiveContainer>
+        <SalesChart data={salesData} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -202,11 +137,11 @@ export default function AdminDashboard() {
               <AlertTriangle size={18} className="text-petfy-orange" />
               <h2 className="font-bold text-navy">Stock Bajo</h2>
             </div>
-            {lowStockProducts.length === 0 ? (
+            {lowStockData.length === 0 ? (
               <p className="text-petfy-grey-text text-sm">Todo el inventario está bien 🎉</p>
             ) : (
               <div className="space-y-2">
-                {lowStockProducts.map((p) => (
+                {lowStockData.map((p) => (
                   <div key={p.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                     <p className="text-sm text-navy font-medium truncate max-w-[160px]">{p.name}</p>
                     <span className={`badge text-xs ${p.stock === 0 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-800'}`}>

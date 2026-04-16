@@ -74,11 +74,12 @@ export default function PedidosAdminPage() {
   const updateStatus = async (orderId: string, status: OrderStatus) => {
     setUpdatingStatus(true);
     try {
-      const { error } = await supabase
-        .from('store_orders')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', orderId);
-      if (error) throw error;
+      const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       toast.success('Estado actualizado');
       setSelectedOrder((o) => o ? { ...o, status } : null);
       loadOrders();
