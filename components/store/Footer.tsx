@@ -125,19 +125,28 @@ export default function Footer() {
               Suscríbete y recibe ofertas exclusivas y consejos para el cuidado de tus mascotas.
             </p>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 const form = e.target as HTMLFormElement;
                 const email = (form.elements.namedItem('email') as HTMLInputElement).value;
-                if (email) {
-                  import('@/lib/supabase').then(({ supabase }) => {
-                    supabase.from('store_newsletter').insert({ email }).then(() => {
-                      form.reset();
-                      import('react-hot-toast').then(({ default: toast }) => {
-                        toast.success('¡Suscripción exitosa!');
-                      });
-                    });
+                if (!email) return;
+                try {
+                  const res = await fetch('/api/newsletter/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
                   });
+                  form.reset();
+                  const { default: toast } = await import('react-hot-toast');
+                  if (res.ok) {
+                    toast.success('¡Suscripción exitosa! Revisa tu correo 🐾');
+                  } else {
+                    const data = await res.json().catch(() => ({})) as { error?: string };
+                    toast.error(data.error ?? 'Error al suscribirse');
+                  }
+                } catch {
+                  const { default: toast } = await import('react-hot-toast');
+                  toast.error('Hubo un error. Intenta de nuevo.');
                 }
               }}
               className="flex gap-2"

@@ -59,12 +59,20 @@ export default function HomePage() {
     if (!email) return;
     setSubscribing(true);
     try {
-      const { error } = await supabase.from('store_newsletter').insert({ email });
-      if (error && error.code !== '23505') throw error;
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(data.error ?? 'Error al suscribirse');
+      }
       toast.success('¡Bienvenido a la familia PetfyCo! 🐾');
       setEmail('');
-    } catch { toast.error('Hubo un error. Intenta de nuevo.'); }
-    finally { setSubscribing(false); }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Hubo un error. Intenta de nuevo.');
+    } finally { setSubscribing(false); }
   };
 
   return (
