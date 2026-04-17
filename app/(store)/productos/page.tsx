@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -80,8 +80,8 @@ export default function ProductosPage() {
   }, [selectedCategory, searchParam, sort, priceRange, page, categories]);
 
   useEffect(() => {
-    if (categories.length >= 0) loadProducts();
-  }, [loadProducts, categories]);
+    loadProducts();
+  }, [loadProducts]);
 
   const applyFilters = () => {
     const params = new URLSearchParams();
@@ -280,12 +280,11 @@ export default function ProductosPage() {
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
                 .map((p, idx, arr) => (
-                  <>
+                  <React.Fragment key={p}>
                     {idx > 0 && arr[idx - 1] !== p - 1 && (
-                      <span key={`ellipsis-${p}`} className="text-petfy-grey-text px-2">...</span>
+                      <span className="text-petfy-grey-text px-2">...</span>
                     )}
                     <button
-                      key={p}
                       onClick={() => setPage(p)}
                       className={`w-10 h-10 rounded-xl text-sm font-semibold transition-colors ${
                         p === page
@@ -295,7 +294,7 @@ export default function ProductosPage() {
                     >
                       {p}
                     </button>
-                  </>
+                  </React.Fragment>
                 ))}
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}

@@ -177,7 +177,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-gray-500 text-sm">
-            © 2026 PetfyCo S.A.S. Medellín, Colombia. NIT 901234567-8
+            © 2026 PetfyCo S.A.S. Medellín, Colombia.{process.env.NEXT_PUBLIC_NIT ? ` NIT ${process.env.NEXT_PUBLIC_NIT}` : ''}
           </p>
           <div className="flex items-center gap-4">
             <a href={WA_URL} target="_blank" rel="noopener noreferrer"

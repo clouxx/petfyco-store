@@ -27,13 +27,13 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // Next.js requiere unsafe-inline para scripts de hidratación (sin nonces)
-              "script-src 'self' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net",
               "style-src 'self' 'unsafe-inline'",
-              // Solo imágenes de dominios conocidos
-              "img-src 'self' data: blob: https://zziupfzzbcnskhmgotxs.supabase.co https://images.unsplash.com",
+              // Imágenes: Supabase + Unsplash + GA + Meta Pixel
+              "img-src 'self' data: blob: https://zziupfzzbcnskhmgotxs.supabase.co https://images.unsplash.com https://www.google-analytics.com https://www.facebook.com",
               "font-src 'self'",
-              // Fetch/XHR solo a Supabase (Wompi se llama server-side desde API routes)
-              "connect-src 'self' https://zziupfzzbcnskhmgotxs.supabase.co wss://zziupfzzbcnskhmgotxs.supabase.co",
+              // Fetch/XHR: Supabase + Google Analytics + Meta Pixel
+              "connect-src 'self' https://zziupfzzbcnskhmgotxs.supabase.co wss://zziupfzzbcnskhmgotxs.supabase.co https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://www.facebook.com https://connect.facebook.net",
               // Sin iframes, sin plugins
               "frame-src 'none'",
               "object-src 'none'",

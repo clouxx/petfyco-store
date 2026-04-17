@@ -314,7 +314,7 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-navy mb-1.5">Ciudad *</label>
-                  <input {...register('billing_city')} className="input-field" placeholder="Bogotá" />
+                  <input {...register('billing_city')} className="input-field" placeholder="Medellín" />
                   {errors.billing_city && <p className="text-red-500 text-xs mt-1">{errors.billing_city.message}</p>}
                 </div>
               </div>
@@ -526,7 +526,7 @@ export default function CheckoutPage() {
                     <a href="/terminos" target="_blank" className="text-primary underline font-semibold">Términos y Condiciones</a>{' '}
                     y la{' '}
                     <a href="/privacidad" target="_blank" className="text-primary underline font-semibold">Política de Privacidad</a>{' '}
-                    de PetfyCo. Vendedor: <strong>PetfyCo S.A.S.</strong> — NIT 901234567-8.
+                    de PetfyCo. Vendedor: <strong>PetfyCo S.A.S.</strong>{process.env.NEXT_PUBLIC_NIT ? ` — NIT ${process.env.NEXT_PUBLIC_NIT}` : ''}.
                     Los precios mostrados incluyen IVA.
                     En cumplimiento de la Ley 1480 (Estatuto del Consumidor) tienes derecho a retracto dentro de los 5 días hábiles posteriores a la entrega.
                   </p>

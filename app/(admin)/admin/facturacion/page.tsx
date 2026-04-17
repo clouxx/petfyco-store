@@ -60,7 +60,7 @@ export default function FacturacionPage() {
       const { error } = await supabase.from('store_invoices').insert({
         invoice_number: invoiceNumber,
         order_id: foundOrder.id,
-        seller_nit: '901234567-8',
+        seller_nit: process.env.NEXT_PUBLIC_NIT ?? '',
         seller_name: 'PetfyCo S.A.S.',
         seller_address: 'Bogotá, Colombia',
         buyer_name: foundOrder.billing_name,
@@ -398,7 +398,7 @@ export default function FacturacionPage() {
               {/* Footer */}
               <div className="border-t border-gray-200 pt-5 text-center text-xs text-petfy-grey-text">
                 <p>Esta factura fue generada electrónicamente por PetfyCo S.A.S.</p>
-                <p>NIT 901234567-8 | Medellín, Colombia | contacto@petfyco.com</p>
+                <p>{process.env.NEXT_PUBLIC_NIT ? `NIT ${process.env.NEXT_PUBLIC_NIT} | ` : ''}Medellín, Colombia | contacto@petfyco.com</p>
                 <p className="mt-1">Resolución DIAN No. [Pendiente] | Rango de autorización: [Pendiente]</p>
               </div>
             </div>

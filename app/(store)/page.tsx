@@ -108,7 +108,7 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="flex gap-8 mt-12 animate-fade-up delay-400">
-              {[['2K+','Clientes'],['500+','Productos'],['4.9★','Valoración']].map(([n,l])=>(
+              {[['2K+','Clientes'],['6+','Productos'],['4.9★','Valoración']].map(([n,l])=>(
                 <div key={l}>
                   <p className="text-2xl font-extrabold text-white">{n}</p>
                   <p className="text-white/60 text-sm">{l}</p>
