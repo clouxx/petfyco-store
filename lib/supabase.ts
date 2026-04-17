@@ -10,12 +10,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+const _url = supabaseUrl as string;
+const _key = supabaseAnonKey as string;
+
 // Browser client — uses cookies so middleware can read the session
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient(_url, _key);
 
 // Server-side client (API routes) — anon key, respects RLS
 export function createClient() {
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
+  return createSupabaseClient(_url, _key);
 }
 
 // Admin client — service role key, bypasses RLS. Solo para uso server-side.
