@@ -52,7 +52,7 @@ export default function ContactoPage() {
               <Mail size={20} className="text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-navy mb-0.5">Correo electrónico</p>
-                <p className="text-petfy-grey-text text-sm">contacto@petfyco.com</p>
+                <p className="text-petfy-grey-text text-sm">petfyco.sas@gmail.com</p>
                 <p className="text-xs text-petfy-grey-text mt-1">Respuesta en 24 h hábiles</p>
               </div>
             </div>
