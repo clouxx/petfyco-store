@@ -63,7 +63,7 @@ type Step = 1 | 2 | 3;
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, total, clearCart } = useCartStore();
+  const { items, total, clearCart, coupon } = useCartStore();
   const [step, setStep] = useState<Step>(1);
   const [billingData, setBillingData] = useState<BillingData | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +94,8 @@ export default function CheckoutPage() {
   }, [items]);
 
   const cartTotal = total();
-  const isFreeShipping = cartTotal >= FREE_SHIPPING_THRESHOLD;
+  const couponDiscount = coupon?.discount_amount ?? 0;
+  const isFreeShipping = (cartTotal - couponDiscount) >= FREE_SHIPPING_THRESHOLD;
 
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<BillingData>({
     resolver: zodResolver(billingSchema),
@@ -134,7 +135,7 @@ export default function CheckoutPage() {
   const { text: covText, sub: covSub, color: covColor, Icon: CovIcon } = COVERAGE_LABELS[coverageStatus];
 
   const shipping = isFreeShipping ? 0 : SHIPPING_BY_ZONE[coverageStatus];
-  const orderTotal = cartTotal + shipping;
+  const orderTotal = cartTotal - couponDiscount + shipping;
 
   const onBillingSubmit = (data: BillingData) => {
     setBillingData(data);
@@ -168,11 +169,12 @@ export default function CheckoutPage() {
             billing_city:         billingData.billing_city,
             billing_depto:        billingData.billing_depto,
           },
-          payment_method: paymentMethod,
-          delivery_same:    deliverySame,
+          payment_method:  paymentMethod,
+          delivery_same:   deliverySame,
           delivery_address: billingData.delivery_address,
-          delivery_city:    billingData.delivery_city,
-          delivery_depto:   billingData.delivery_depto,
+          delivery_city:   billingData.delivery_city,
+          delivery_depto:  billingData.delivery_depto,
+          coupon_code:     coupon?.code ?? null,
         }),
       });
 
@@ -594,6 +596,12 @@ export default function CheckoutPage() {
                 <span className="text-petfy-grey-text">Subtotal</span>
                 <span className="font-medium">{formatCOP(cartTotal)}</span>
               </div>
+              {couponDiscount > 0 && coupon && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">Cupón {coupon.code}</span>
+                  <span className="font-medium text-green-600">-{formatCOP(couponDiscount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-petfy-grey-text">Envío</span>
                 <span className={`font-medium ${shipping === 0 ? 'text-green-600' : ''}`}>

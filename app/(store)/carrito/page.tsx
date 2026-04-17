@@ -11,17 +11,41 @@ const FREE_SHIPPING_THRESHOLD = 150000;
 const SHIPPING_COST = 8000;
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, total, clearCart } = useCartStore();
+  const { items, removeItem, updateQty, total, clearCart, coupon, applyCoupon, removeCoupon } = useCartStore();
   const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
   const cartTotal = total();
   const shipping = cartTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const discount = promoApplied ? Math.floor(cartTotal * 0.1) : 0;
+  const discount = coupon?.discount_amount ?? 0;
   const orderTotal = cartTotal - discount + shipping;
 
-  const handlePromo = () => {
-    if (promoCode.toUpperCase() === 'PETFY10') {
-      setPromoApplied(true);
+  const handlePromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError('');
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode.trim(), subtotal: cartTotal }),
+      });
+      const data = await res.json() as { valid: boolean; error?: string; coupon_code?: string; discount_type?: 'percentage' | 'fixed'; discount_value?: number; discount_amount?: number };
+      if (!data.valid) {
+        setPromoError(data.error ?? 'Cupón no válido');
+      } else {
+        applyCoupon({
+          code: data.coupon_code!,
+          discount_type: data.discount_type!,
+          discount_value: data.discount_value!,
+          discount_amount: data.discount_amount!,
+        });
+        setPromoCode('');
+      }
+    } catch {
+      setPromoError('Error al validar el cupón. Intenta de nuevo.');
+    } finally {
+      setPromoLoading(false);
     }
   };
 
@@ -151,10 +175,15 @@ export default function CartPage() {
                 <span className="text-petfy-grey-text">Subtotal</span>
                 <span className="font-medium text-navy">{formatCOP(cartTotal)}</span>
               </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Descuento (10%)</span>
-                  <span className="font-medium text-green-600">-{formatCOP(discount)}</span>
+              {discount > 0 && coupon && (
+                <div className="flex justify-between text-sm items-center">
+                  <span className="text-green-600">
+                    Cupón {coupon.code} ({coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCOP(coupon.discount_value)})
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-green-600">-{formatCOP(discount)}</span>
+                    <button onClick={removeCoupon} className="text-gray-400 hover:text-red-500 text-xs transition-colors" title="Quitar cupón">✕</button>
+                  </div>
                 </div>
               )}
               <div className="flex justify-between text-sm">
@@ -170,29 +199,35 @@ export default function CartPage() {
             </div>
 
             {/* Promo code */}
-            <div className="mb-5">
-              <label className="block text-xs font-semibold text-navy mb-2">Código de descuento</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="PETFY10"
-                  disabled={promoApplied}
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-petfy-grey-text"
-                />
-                <button
-                  onClick={handlePromo}
-                  disabled={promoApplied || !promoCode}
-                  className="bg-navy text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-navy/80 transition-colors disabled:opacity-50"
-                >
-                  {promoApplied ? '✓' : 'Aplicar'}
-                </button>
+            {!coupon && (
+              <div className="mb-5">
+                <label className="block text-xs font-semibold text-navy mb-2">Código de descuento</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); }}
+                    placeholder="PETFY10"
+                    disabled={promoLoading}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handlePromo(); }}
+                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                  />
+                  <button
+                    onClick={handlePromo}
+                    disabled={promoLoading || !promoCode.trim()}
+                    className="bg-navy text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-navy/80 transition-colors disabled:opacity-50"
+                  >
+                    {promoLoading ? '...' : 'Aplicar'}
+                  </button>
+                </div>
+                {promoError && <p className="text-red-500 text-xs mt-1.5">{promoError}</p>}
               </div>
-              {promoApplied && (
-                <p className="text-green-600 text-xs mt-1.5 font-medium">¡Código aplicado! 10% de descuento</p>
-              )}
-            </div>
+            )}
+            {coupon && (
+              <div className="mb-5 bg-green-50 rounded-xl px-4 py-2.5 text-green-700 text-xs font-medium">
+                ¡Cupón <span className="font-bold">{coupon.code}</span> aplicado!
+              </div>
+            )}
 
             <Link
               href="/checkout"

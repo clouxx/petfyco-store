@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     delivery_address,
     delivery_city,
     delivery_depto,
+    coupon_code,
   } = body as {
     items: { product_id: string; quantity: number }[];
     billing: {
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
     delivery_address?: string;
     delivery_city?: string;
     delivery_depto?: string;
+    coupon_code?: string | null;
   };
 
   // Obtener user_id verificado server-side (B1 fix — no confiar en el cliente)
@@ -138,11 +140,39 @@ export async function POST(req: NextRequest) {
     };
   });
 
-  // Calcular envío server-side
+  // Validar cupón server-side (re-validar — no confiar en el cliente)
+  let discount = 0;
+  let appliedCouponCode: string | null = null;
+  let appliedCouponId: string | null = null;
+  if (coupon_code && typeof coupon_code === 'string') {
+    const { data: coupon } = await supabase
+      .from('store_coupons')
+      .select('id, code, discount_type, discount_value, min_order_amount, max_uses, uses_count, expires_at')
+      .eq('code', coupon_code.toUpperCase().trim())
+      .eq('active', true)
+      .maybeSingle();
+
+    const couponValid =
+      coupon &&
+      (!coupon.expires_at || new Date(coupon.expires_at) >= new Date()) &&
+      (coupon.max_uses === null || coupon.uses_count < coupon.max_uses) &&
+      subtotal >= (coupon.min_order_amount ?? 0);
+
+    if (couponValid) {
+      discount =
+        coupon.discount_type === 'percentage'
+          ? Math.floor((subtotal * coupon.discount_value) / 100)
+          : Math.min(coupon.discount_value, subtotal);
+      appliedCouponCode = coupon.code;
+      appliedCouponId = coupon.id;
+    }
+  }
+
+  // Calcular envío server-side (sobre el subtotal con descuento aplicado)
   const deliveryCity  = delivery_same ? billing.billing_city  : (delivery_city  ?? '');
   const deliveryDepto = delivery_same ? billing.billing_depto : (delivery_depto ?? '');
-  const shipping = calcShipping(subtotal, deliveryCity, deliveryDepto);
-  const total    = subtotal + shipping;
+  const shipping = calcShipping(subtotal - discount, deliveryCity, deliveryDepto);
+  const total    = subtotal - discount + shipping;
 
   // Crear orden
   const orderNumber = 'PFC-' + Date.now().toString().slice(-8);
@@ -154,7 +184,7 @@ export async function POST(req: NextRequest) {
       user_id:            serverUserId,
       status:             'pending',
       subtotal,
-      discount:           0,
+      discount,
       shipping,
       total,
       billing_name:       billing.billing_name,
@@ -190,6 +220,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create order items' }, { status: 500 });
   }
 
+  // Incrementar uses_count del cupón — atómico via RPC (best-effort)
+  if (appliedCouponId) {
+    supabase.rpc('increment_coupon_uses', { p_coupon_id: appliedCouponId }).then(() => {});
+  }
+
   // Para transferencia: enviar email de confirmación server-side (tiene acceso al secret)
   if (payment_method === 'transferencia') {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petfyco-store.vercel.app';
@@ -213,6 +248,8 @@ export async function POST(req: NextRequest) {
           subtotal:     i.subtotal,
         })),
         subtotal,
+        discount,
+        coupon_code: appliedCouponCode,
         shipping,
         total,
         payment_method,

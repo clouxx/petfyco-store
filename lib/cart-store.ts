@@ -2,12 +2,22 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Product } from './types';
 
+interface AppliedCoupon {
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  discount_amount: number;
+}
+
 interface CartState {
   items: CartItem[];
+  coupon: AppliedCoupon | null;
   addItem: (product: Product, qty?: number) => void;
   removeItem: (productId: string) => void;
   updateQty: (productId: string, qty: number) => void;
   clearCart: () => void;
+  applyCoupon: (coupon: AppliedCoupon) => void;
+  removeCoupon: () => void;
   total: () => number;
   itemCount: () => number;
 }
@@ -16,6 +26,7 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      coupon: null,
 
       addItem: (product: Product, qty = 1) => {
         set((state) => {
@@ -51,7 +62,11 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], coupon: null }),
+
+      applyCoupon: (coupon: AppliedCoupon) => set({ coupon }),
+
+      removeCoupon: () => set({ coupon: null }),
 
       total: () => {
         const { items } = get();
