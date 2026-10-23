@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase';
 import ProductoPageClient from './ProductoPageClient';
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const supabase = createClient();
   const { data: product } = await supabase
     .from('store_products')
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProductoPage({ params }: Props) {
+export default async function ProductoPage(props: Props) {
+  const params = await props.params;
   const supabase = createClient();
   const { data: product } = await supabase
     .from('store_products')

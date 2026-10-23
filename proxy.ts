@@ -9,7 +9,7 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '')
   .map((e) => e.trim())
   .filter(Boolean);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
     request: { headers: request.headers },
   });
